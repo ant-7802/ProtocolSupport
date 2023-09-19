@@ -1,32 +1,15 @@
 package protocolsupport.api;
 
-import protocolsupport.zplatform.ServerPlatform;
-
 public enum ServerPlatformIdentifier {
+    SPIGOT("Spigot");
 
-	SPIGOT("Spigot"),
-	GLOWSTONE("GlowStone");
+    private final String name;
 
-	/**
-	 * Returns current platform identifier
-	 * @return current platform identifier
-	 */
-	public static ServerPlatformIdentifier get() {
-		return ServerPlatform.get().getIdentifier();
-	}
+    private ServerPlatformIdentifier(String name) {
+        this.name = name;
+    }
 
-	private final String name;
-	private ServerPlatformIdentifier(String name) {
-		this.name = name;
-	}
-
-	/**
-	 * Returns user friendly server platform name <br>
-	 * This name can change, so it shouldn't be used as a key anywhere
-	 * @return user friendly server platform name
-	 */
-	public String getName() {
-		return name;
-	}
-
+    public String getName() {
+        return name;
+    }
 }
