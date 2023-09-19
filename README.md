@@ -8,6 +8,7 @@ ProtocolSupport
 Support 1.12, 1.11, 1.10, 1.9, 1.8, 1.7, 1.6, 1.5, 1.4.7 client on Spigot 1.12.2
 
 Important notes:
+* This is supposed to be compiled with Java 8
 * Only latest version of this plugin is supported
 * This plugin can't be reloaded or loaded not at server startup
 * This plugin doesn't work with netty native transport
