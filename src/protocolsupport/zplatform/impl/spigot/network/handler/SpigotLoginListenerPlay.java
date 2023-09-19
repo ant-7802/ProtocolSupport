@@ -1,95 +1,79 @@
 package protocolsupport.zplatform.impl.spigot.network.handler;
 
-import java.net.SocketAddress;
+import java.net.InetSocketAddress;
 import java.text.SimpleDateFormat;
+import java.util.Date;
 
 import org.bukkit.Bukkit;
 import org.bukkit.event.player.PlayerLoginEvent;
 import org.spigotmc.SpigotConfig;
 
-import com.mojang.authlib.GameProfile;
-
-import net.minecraft.network.NetworkManager;
-import net.minecraft.network.chat.IChatBaseComponent;
-import net.minecraft.network.protocol.game.PacketListenerPlayIn;
-import net.minecraft.network.protocol.game.PacketPlayInAbilities;
-import net.minecraft.network.protocol.game.PacketPlayInAdvancements;
-import net.minecraft.network.protocol.game.PacketPlayInArmAnimation;
-import net.minecraft.network.protocol.game.PacketPlayInAutoRecipe;
-import net.minecraft.network.protocol.game.PacketPlayInBEdit;
-import net.minecraft.network.protocol.game.PacketPlayInBeacon;
-import net.minecraft.network.protocol.game.PacketPlayInBlockDig;
-import net.minecraft.network.protocol.game.PacketPlayInBlockPlace;
-import net.minecraft.network.protocol.game.PacketPlayInBoatMove;
-import net.minecraft.network.protocol.game.PacketPlayInChat;
-import net.minecraft.network.protocol.game.PacketPlayInClientCommand;
-import net.minecraft.network.protocol.game.PacketPlayInCloseWindow;
-import net.minecraft.network.protocol.game.PacketPlayInCustomPayload;
-import net.minecraft.network.protocol.game.PacketPlayInDifficultyChange;
-import net.minecraft.network.protocol.game.PacketPlayInDifficultyLock;
-import net.minecraft.network.protocol.game.PacketPlayInEnchantItem;
-import net.minecraft.network.protocol.game.PacketPlayInEntityAction;
-import net.minecraft.network.protocol.game.PacketPlayInEntityNBTQuery;
-import net.minecraft.network.protocol.game.PacketPlayInFlying;
-import net.minecraft.network.protocol.game.PacketPlayInHeldItemSlot;
-import net.minecraft.network.protocol.game.PacketPlayInItemName;
-import net.minecraft.network.protocol.game.PacketPlayInJigsawGenerate;
-import net.minecraft.network.protocol.game.PacketPlayInKeepAlive;
-import net.minecraft.network.protocol.game.PacketPlayInPickItem;
-import net.minecraft.network.protocol.game.PacketPlayInRecipeDisplayed;
-import net.minecraft.network.protocol.game.PacketPlayInRecipeSettings;
-import net.minecraft.network.protocol.game.PacketPlayInResourcePackStatus;
-import net.minecraft.network.protocol.game.PacketPlayInSetCommandBlock;
-import net.minecraft.network.protocol.game.PacketPlayInSetCommandMinecart;
-import net.minecraft.network.protocol.game.PacketPlayInSetCreativeSlot;
-import net.minecraft.network.protocol.game.PacketPlayInSetJigsaw;
-import net.minecraft.network.protocol.game.PacketPlayInSettings;
-import net.minecraft.network.protocol.game.PacketPlayInSpectate;
-import net.minecraft.network.protocol.game.PacketPlayInSteerVehicle;
-import net.minecraft.network.protocol.game.PacketPlayInStruct;
-import net.minecraft.network.protocol.game.PacketPlayInTabComplete;
-import net.minecraft.network.protocol.game.PacketPlayInTeleportAccept;
-import net.minecraft.network.protocol.game.PacketPlayInTileNBTQuery;
-import net.minecraft.network.protocol.game.PacketPlayInTrSel;
-import net.minecraft.network.protocol.game.PacketPlayInUpdateSign;
-import net.minecraft.network.protocol.game.PacketPlayInUseEntity;
-import net.minecraft.network.protocol.game.PacketPlayInUseItem;
-import net.minecraft.network.protocol.game.PacketPlayInVehicleMove;
-import net.minecraft.network.protocol.game.PacketPlayInWindowClick;
-import net.minecraft.network.protocol.game.ServerboundPongPacket;
-import net.minecraft.network.protocol.login.PacketLoginInCustomPayload;
-import net.minecraft.network.protocol.login.PacketLoginInEncryptionBegin;
-import net.minecraft.network.protocol.login.PacketLoginInListener;
-import net.minecraft.network.protocol.login.PacketLoginInStart;
-import net.minecraft.server.MinecraftServer;
-import net.minecraft.server.level.EntityPlayer;
-import net.minecraft.server.level.WorldServer;
-import net.minecraft.server.players.GameProfileBanEntry;
-import net.minecraft.server.players.IpBanEntry;
-import net.minecraft.server.players.JsonList;
-import net.minecraft.server.players.PlayerList;
-import net.minecraft.world.level.World;
+import net.minecraft.server.v1_12_R1.EntityPlayer;
+import net.minecraft.server.v1_12_R1.ExpirableListEntry;
+import net.minecraft.server.v1_12_R1.GameProfileBanEntry;
+import net.minecraft.server.v1_12_R1.IChatBaseComponent;
+import net.minecraft.server.v1_12_R1.ITickable;
+import net.minecraft.server.v1_12_R1.IpBanEntry;
+import net.minecraft.server.v1_12_R1.MinecraftServer;
+import net.minecraft.server.v1_12_R1.NetworkManager;
+import net.minecraft.server.v1_12_R1.PacketListenerPlayIn;
+import net.minecraft.server.v1_12_R1.PacketLoginInEncryptionBegin;
+import net.minecraft.server.v1_12_R1.PacketLoginInListener;
+import net.minecraft.server.v1_12_R1.PacketLoginInStart;
+import net.minecraft.server.v1_12_R1.PacketPlayInAbilities;
+import net.minecraft.server.v1_12_R1.PacketPlayInAdvancements;
+import net.minecraft.server.v1_12_R1.PacketPlayInArmAnimation;
+import net.minecraft.server.v1_12_R1.PacketPlayInAutoRecipe;
+import net.minecraft.server.v1_12_R1.PacketPlayInBlockDig;
+import net.minecraft.server.v1_12_R1.PacketPlayInBlockPlace;
+import net.minecraft.server.v1_12_R1.PacketPlayInBoatMove;
+import net.minecraft.server.v1_12_R1.PacketPlayInChat;
+import net.minecraft.server.v1_12_R1.PacketPlayInClientCommand;
+import net.minecraft.server.v1_12_R1.PacketPlayInCloseWindow;
+import net.minecraft.server.v1_12_R1.PacketPlayInCustomPayload;
+import net.minecraft.server.v1_12_R1.PacketPlayInEnchantItem;
+import net.minecraft.server.v1_12_R1.PacketPlayInEntityAction;
+import net.minecraft.server.v1_12_R1.PacketPlayInFlying;
+import net.minecraft.server.v1_12_R1.PacketPlayInHeldItemSlot;
+import net.minecraft.server.v1_12_R1.PacketPlayInKeepAlive;
+import net.minecraft.server.v1_12_R1.PacketPlayInRecipeDisplayed;
+import net.minecraft.server.v1_12_R1.PacketPlayInResourcePackStatus;
+import net.minecraft.server.v1_12_R1.PacketPlayInSetCreativeSlot;
+import net.minecraft.server.v1_12_R1.PacketPlayInSettings;
+import net.minecraft.server.v1_12_R1.PacketPlayInSpectate;
+import net.minecraft.server.v1_12_R1.PacketPlayInSteerVehicle;
+import net.minecraft.server.v1_12_R1.PacketPlayInTabComplete;
+import net.minecraft.server.v1_12_R1.PacketPlayInTeleportAccept;
+import net.minecraft.server.v1_12_R1.PacketPlayInTransaction;
+import net.minecraft.server.v1_12_R1.PacketPlayInUpdateSign;
+import net.minecraft.server.v1_12_R1.PacketPlayInUseEntity;
+import net.minecraft.server.v1_12_R1.PacketPlayInUseItem;
+import net.minecraft.server.v1_12_R1.PacketPlayInVehicleMove;
+import net.minecraft.server.v1_12_R1.PacketPlayInWindowClick;
+import net.minecraft.server.v1_12_R1.PlayerInteractManager;
+import net.minecraft.server.v1_12_R1.PlayerList;
 import protocolsupport.protocol.packet.handler.AbstractLoginListenerPlay;
+import protocolsupport.protocol.utils.authlib.GameProfile;
 import protocolsupport.zplatform.impl.spigot.SpigotMiscUtils;
-import protocolsupport.zplatform.impl.spigot.network.SpigotNetworkManagerWrapper;
 import protocolsupport.zplatform.network.NetworkManagerWrapper;
 
-public class SpigotLoginListenerPlay extends AbstractLoginListenerPlay implements PacketLoginInListener, PacketListenerPlayIn {
+public class SpigotLoginListenerPlay extends AbstractLoginListenerPlay implements PacketLoginInListener, PacketListenerPlayIn, ITickable {
 
-	protected static final MinecraftServer server = SpigotMiscUtils.SERVER;
+	protected static final MinecraftServer server = SpigotMiscUtils.getServer();
 
-	public SpigotLoginListenerPlay(NetworkManagerWrapper networkmanager) {
-		super(networkmanager);
+	public SpigotLoginListenerPlay(NetworkManagerWrapper networkmanager, GameProfile profile, boolean onlineMode, String hostname) {
+		super(networkmanager, profile, onlineMode, hostname);
+	}
+
+	@Override
+	public void e() {
+		tick();
 	}
 
 	@Override
 	protected JoinData createJoinData() {
-		WorldServer worldserver = server.a(World.e);
-		EntityPlayer entity = new EntityPlayer(
-			server,
-			worldserver,
-			SpigotMiscUtils.toMojangGameProfile(connection.getLoginProfile())
-		);
+		com.mojang.authlib.GameProfile mojangGameProfile = SpigotMiscUtils.toMojangGameProfile(profile);
+		EntityPlayer entity = new EntityPlayer(server, server.getWorldServer(0), mojangGameProfile, new PlayerInteractManager(server.getWorldServer(0)));
 		return new JoinData(entity.getBukkitEntity(), entity) {
 			@Override
 			protected void close() {
@@ -97,61 +81,60 @@ public class SpigotLoginListenerPlay extends AbstractLoginListenerPlay implement
 		};
 	}
 
-	protected static final String BAN_DATE_FORMAT_STRING = "yyyy-MM-dd 'at' HH:mm:ss z";
-	@SuppressWarnings("deprecation")
+	private static final SimpleDateFormat banDateFormat = new SimpleDateFormat("yyyy-MM-dd 'at' HH:mm:ss z");
 	@Override
 	protected void checkBans(PlayerLoginEvent event, Object[] data) {
-		PlayerList playerlist = server.ac();
+		PlayerList playerlist = server.getPlayerList();
 
-		GameProfile mojangGameProfile = ((EntityPlayer) data[0]).fq();
-		SocketAddress address = networkManager.getAddress();
+		com.mojang.authlib.GameProfile mojangGameProfile = ((EntityPlayer) data[0]).getProfile();
 
-		GameProfileBanEntry profileban = ((JsonList<GameProfile, GameProfileBanEntry>) playerlist.f()).b(mojangGameProfile);
-		if (profileban != null) {
-			String reason = "You are banned from this server!\nReason: " + profileban.d();
-			if (profileban.c() != null) {
-				reason = reason + "\nYour ban will be removed on " +  new SimpleDateFormat(BAN_DATE_FORMAT_STRING).format(profileban.c());
+		InetSocketAddress socketaddress = networkManager.getAddress();
+		if (playerlist.getProfileBans().isBanned(mojangGameProfile)) {
+			GameProfileBanEntry profileban = playerlist.getProfileBans().get(mojangGameProfile);
+			if (!hasExpired(profileban)) {
+				String reason = "You are banned from this server!\nReason: " + profileban.getReason();
+				if (profileban.getExpires() != null) {
+					reason = reason + "\nYour ban will be removed on " + banDateFormat.format(profileban.getExpires());
+				}
+				event.disallow(PlayerLoginEvent.Result.KICK_BANNED, reason);
 			}
-			event.disallow(PlayerLoginEvent.Result.KICK_BANNED, reason);
-			return;
-		}
-
-		if (!playerlist.c(mojangGameProfile)) {
+		} else if (!playerlist.isWhitelisted(mojangGameProfile)) {
 			event.disallow(PlayerLoginEvent.Result.KICK_WHITELIST, SpigotConfig.whitelistMessage);
-			return;
-		}
-
-		IpBanEntry ipban = playerlist.g().b(address);
-		if (ipban != null) {
-			String reason = "Your IP address is banned from this server!\nReason: " + ipban.d();
-			if (ipban.c() != null) {
-				reason = reason + "\nYour ban will be removed on " + new SimpleDateFormat(BAN_DATE_FORMAT_STRING).format(ipban.c());
+		} else if (playerlist.getIPBans().isBanned(socketaddress)) {
+			IpBanEntry ipban = playerlist.getIPBans().get(socketaddress);
+			if (!hasExpired(ipban)) {
+				String reason = "Your IP address is banned from this server!\nReason: " + ipban.getReason();
+				if (ipban.getExpires() != null) {
+					reason = reason + "\nYour ban will be removed on " + banDateFormat.format(ipban.getExpires());
+				}
+				event.disallow(PlayerLoginEvent.Result.KICK_BANNED, reason);
 			}
-			event.disallow(PlayerLoginEvent.Result.KICK_BANNED, reason);
-			return;
-		}
-
-		if ((playerlist.j.size() >= playerlist.n()) && !playerlist.f(mojangGameProfile)) {
+		} else if ((playerlist.players.size() >= playerlist.getMaxPlayers()) && !playerlist.f(mojangGameProfile)) {
 			event.disallow(PlayerLoginEvent.Result.KICK_FULL, SpigotConfig.serverFullMessage);
 		}
 	}
 
+	private static boolean hasExpired(ExpirableListEntry<?> entry) {
+		Date expireDate = entry.getExpires();
+		return (expireDate != null) && expireDate.before(new Date());
+	}
+
 	@Override
 	protected void joinGame(Object[] data) {
-		server.ac().a((NetworkManager) networkManager.unwrap(), (EntityPlayer) data[0]);
+		server.getPlayerList().a((NetworkManager) networkManager.unwrap(), (EntityPlayer) data[0]);
 	}
 
 	@Override
-	public void a(IChatBaseComponent ichatbasecomponent) {
-		Bukkit.getLogger().info(getConnectionRepr() + " lost connection: " + ichatbasecomponent.a());
+	public void a(final IChatBaseComponent ichatbasecomponent) {
+		Bukkit.getLogger().info(getConnectionRepr() + " lost connection: " + ichatbasecomponent.getText());
 	}
 
 	@Override
-	public void a(PacketLoginInStart packetlogininstart) {
+	public void a(final PacketLoginInStart packetlogininstart) {
 	}
 
 	@Override
-	public void a(PacketLoginInEncryptionBegin packetlogininencryptionbegin) {
+	public void a(final PacketLoginInEncryptionBegin packetlogininencryptionbegin) {
 	}
 
 	@Override
@@ -172,6 +155,10 @@ public class SpigotLoginListenerPlay extends AbstractLoginListenerPlay implement
 
 	@Override
 	public void a(PacketPlayInSettings p0) {
+	}
+
+	@Override
+	public void a(PacketPlayInTransaction p0) {
 	}
 
 	@Override
@@ -268,79 +255,6 @@ public class SpigotLoginListenerPlay extends AbstractLoginListenerPlay implement
 
 	@Override
 	public void a(PacketPlayInAdvancements arg0) {
-	}
-
-	@Override
-	public void a(PacketPlayInSetCommandBlock var1) {
-	}
-
-	@Override
-	public void a(PacketPlayInSetCommandMinecart var1) {
-	}
-
-	@Override
-	public void a(PacketPlayInPickItem var1) {
-	}
-
-	@Override
-	public void a(PacketPlayInItemName var1) {
-	}
-
-	@Override
-	public void a(PacketPlayInBeacon var1) {
-	}
-
-	@Override
-	public void a(PacketPlayInStruct var1) {
-	}
-
-	@Override
-	public void a(PacketPlayInTrSel var1) {
-	}
-
-	@Override
-	public void a(PacketPlayInBEdit var1) {
-	}
-
-	@Override
-	public void a(PacketPlayInEntityNBTQuery var1) {
-	}
-
-	@Override
-	public void a(PacketPlayInTileNBTQuery var1) {
-	}
-
-	@Override
-	public void a(PacketLoginInCustomPayload var1) {
-	}
-
-	@Override
-	public void a(PacketPlayInSetJigsaw arg0) {
-	}
-
-	@Override
-	public void a(PacketPlayInDifficultyChange arg0) {
-	}
-
-	@Override
-	public void a(PacketPlayInDifficultyLock arg0) {
-	}
-
-	@Override
-	public void a(PacketPlayInJigsawGenerate var1) {
-	}
-
-	@Override
-	public void a(PacketPlayInRecipeSettings var1) {
-	}
-
-	@Override
-	public void a(ServerboundPongPacket p0) {
-	}
-
-	@Override
-	public NetworkManager a() {
-		return ((SpigotNetworkManagerWrapper) this.networkManager).unwrap();
 	}
 
 }

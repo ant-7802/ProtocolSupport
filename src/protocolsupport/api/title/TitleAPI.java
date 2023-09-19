@@ -11,9 +11,6 @@ import protocolsupport.zplatform.ServerPlatform;
 
 public class TitleAPI {
 
-	private TitleAPI() {
-	}
-
 	/**
 	 * Sends title, subtitle, and it's params <br>
 	 * Title and subtitle can't be both null

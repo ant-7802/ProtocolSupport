@@ -1,17 +1,21 @@
 package protocolsupport.zplatform;
 
+import java.security.PublicKey;
 import java.util.List;
-import java.util.UUID;
 
+import org.bukkit.Material;
 import org.bukkit.entity.Entity;
 
 import protocolsupport.api.chat.components.BaseComponent;
 import protocolsupport.api.events.ServerPingResponseEvent.ProtocolInfo;
-import protocolsupport.api.utils.Profile;
+import protocolsupport.protocol.utils.authlib.GameProfile;
+import protocolsupport.protocol.utils.types.Position;
 
 public interface PlatformPacketFactory {
 
-	public Object createOutboundChatPacket(String message, int position, UUID uuid);
+	public Object createInboundInventoryClosePacket();
+
+	public Object createOutboundChatPacket(String message, int position);
 
 	public Object createTabHeaderFooterPacket(BaseComponent header, BaseComponent footer);
 
@@ -25,19 +29,21 @@ public interface PlatformPacketFactory {
 
 	public Object createTitleParamsPacket(int fadeIn, int stay, int fadeOut);
 
-	public Object createLoginDisconnectPacket(BaseComponent message);
+	public Object createLoginDisconnectPacket(String message);
 
-	public Object createPlayDisconnectPacket(BaseComponent message);
+	public Object createPlayDisconnectPacket(String message);
 
-	public Object createLoginEncryptionBeginPacket(byte[] publicKey, byte[] randomBytes);
+	public Object createLoginEncryptionBeginPacket(PublicKey publicKey, byte[] randomBytes);
 
 	public Object createSetCompressionPacket(int threshold);
 
+	public Object createBlockBreakSoundPacket(Position pos, Material type);
+
 	public Object createStatusPongPacket(long pingId);
 
-	public Object createStatusServerInfoPacket(List<String> profiles, ProtocolInfo info, String icon, BaseComponent motd, int onlinePlayers, int maxPlayers);
+	public Object createStausServerInfoPacket(List<String> profiles, ProtocolInfo info, String icon, String motd, int maxPlayers);
 
-	public Object createLoginSuccessPacket(Profile profile);
+	public Object createLoginSuccessPacket(GameProfile profile);
 
 	public Object createEmptyCustomPayloadPacket(String tag);
 
@@ -53,8 +59,6 @@ public interface PlatformPacketFactory {
 	public int getOutLoginSuccessPacketId();
 
 	public int getOutLoginSetCompressionPacketId();
-
-	public int getOutLoginCustomPayloadPacketId();
 
 	public int getOutStatusServerInfoPacketId();
 
@@ -80,6 +84,8 @@ public interface PlatformPacketFactory {
 
 	public int getOutPlayHeldSlotPacketId();
 
+	public int getOutPlayBedPacketId();
+
 	public int getOutPlayAnimationPacketId();
 
 	public int getOutPlaySpawnNamedPacketId();
@@ -97,6 +103,8 @@ public interface PlatformPacketFactory {
 	public int getOutPlayEntityVelocityPacketId();
 
 	public int getOutPlayEntityDestroyPacketId();
+
+	public int getOutPlayEntityPacketId();
 
 	public int getOutPlayEntityRelMovePacketId();
 
@@ -118,17 +126,11 @@ public interface PlatformPacketFactory {
 
 	public int getOutPlayEntityEffectRemovePacketId();
 
-	public int getOutPlayEntitySoundPacketId();
-
 	public int getOutPlayExperiencePacketId();
 
 	public int getOutPlayEntityAttributesPacketId();
 
-	public int getOutPlayChunkDataPacketId();
-
-	public int getOutPlayChunkLightPacketId();
-
-	public int getOutPlayChunkUnloadPacketId();
+	public int getOutPlayChunkSinglePacketId();
 
 	public int getOutPlayBlockChangeMultiPacketId();
 
@@ -148,9 +150,9 @@ public interface PlatformPacketFactory {
 
 	public int getOutPlayGameStateChangePacketId();
 
-	public int getOutPlayWindowOpenPacketId();
+	public int getOutPlaySpawnWeatherPacketId();
 
-	public int getOutPlayWindowHorseOpenPacketId();
+	public int getOutPlayWindowOpenPacketId();
 
 	public int getOutPlayWindowClosePacketId();
 
@@ -159,6 +161,8 @@ public interface PlatformPacketFactory {
 	public int getOutPlayWindowSetItemsPacketId();
 
 	public int getOutPlayWindowDataPacketId();
+
+	public int getOutPlayWindowTransactionPacketId();
 
 	public int getOutPlayMapPacketId();
 
@@ -190,13 +194,21 @@ public interface PlatformPacketFactory {
 
 	public int getOutPlayCameraPacketId();
 
+	public int getOutPlayWorldBorderPacketId();
+
+	public int getOutPlayTitlePacketId();
+
 	public int getOutPlayPlayerListHeaderFooterPacketId();
 
 	public int getOutPlaySetPassengersPacketId();
 
+	public int getOutPlayChunkUnloadPacketId();
+
 	public int getOutPlayWorldCustomSoundPacketId();
 
 	public int getOutPlayServerDifficultyPacketId();
+
+	public int getOutPlayCombatEventPacketId();
 
 	public int getOutPlayBossBarPacketId();
 
@@ -210,63 +222,8 @@ public interface PlatformPacketFactory {
 
 	public int getOutPlayAdvancementsTabPacketId();
 
-	public int getOutPlayCraftRecipeConfirmPacketId();
+	public int getOutPlayCraftingGridConfirmPacketId();
 
-	public int getOutPlayDeclareCommandsPacketId();
-
-	public int getOutPlayDeclareRecipesPacketId();
-
-	public int getOutPlayDeclareTagsPacket();
-
-	public int getOutPlayQueryNBTResponsePacketId();
-
-	public int getOutPlayStopSoundPacketId();
-
-	public int getOutPlayLookAtPacketId();
-
-	public int getOutPlaySetViewCenterPacketId();
-
-	public int getOutPlayUpdateViewDistancePacketId();
-
-	public int getOutPlayUpdateSimulationDistancePacketId();
-
-	public int getOutPlayMerchantTradeListPacketId();
-
-	public int getOutPlayBookOpenPacketId();
-
-	public int getOutPlayAcknowledgePlayerDiggingPacketId();
-
-	public int getOutPlayTitleTextPacketId();
-
-	public int getOutPlayTitleSubTextPacketId();
-
-	public int getOutPlayTitleAnimationPacketId();
-
-	public int getOutPlayTitleClearPacketId();
-
-	public int getOutPlayActionbarPacketId();
-
-	public int getOutPlayWorldborderInitPacketId();
-
-	public int getOutPlayWorldborderCenterPacketId();
-
-	public int getOutPlayWorldborderLerpSizePacketId();
-
-	public int getOutPlayWorldborderSizePacketId();
-
-	public int getOutPlayWorldborderWarnDelayPacketId();
-
-	public int getOutPlayWorldborderWarnDistancePacketId();
-
-	public int getOutPlayCombatBeginPacketId();
-
-	public int getOutPlayCombatEndPacketId();
-
-	public int getOutPlayCombatDeathPacketId();
-
-	public int getOutPlayVibration();
-
-	public int getOutPlaySyncPing();
 
 	public int getInHandshakeStartPacketId();
 
@@ -278,21 +235,19 @@ public interface PlatformPacketFactory {
 
 	public int getInLoginEncryptionBeginPacketId();
 
-	public int getInLoginCustomPayloadPacketId();
-
 	public int getInPlayKeepAlivePacketId();
 
 	public int getInPlayChatPacketId();
 
 	public int getInPlayUseEntityPacketId();
 
+	public int getInPlayPlayerPacketId();
+
 	public int getInPlayPositionPacketId();
 
 	public int getInPlayLookPacketId();
 
 	public int getInPlayPositionLookPacketId();
-
-	public int getInPlayGroundPacketId();
 
 	public int getInPlayBlockDigPacketId();
 
@@ -313,6 +268,8 @@ public interface PlatformPacketFactory {
 	public int getInPlayWindowClosePacketId();
 
 	public int getInPlayWindowClickPacketId();
+
+	public int getInPlayWindowTransactionPacketId();
 
 	public int getInPlayCreativeSetSlotPacketId();
 
@@ -338,38 +295,10 @@ public interface PlatformPacketFactory {
 
 	public int getInPlayTeleportAcceptPacketId();
 
-	public int getInPlayRecipeBookRecipePacketId();
+	public int getInPlayCraftingBookPacketId();
 
-	public int getInPlayRecipeBookStatePacketId();
-
-	public int getInPlayCraftRecipeRequestPacketId();
+	public int getInPlayPrepareCraftingGridPacketId();
 
 	public int getInPlayAdvancementTabPacketId();
-
-	public int getInPlayQueryBlockNBTPacketId();
-
-	public int getInPlayQueryEntityNBTPacketId();
-
-	public int getInPlayEditBookPacketId();
-
-	public int getInPlayPickItemPacketId();
-
-	public int getInPlayNameItemPacketId();
-
-	public int getInPlaySelectTradePacketId();
-
-	public int getInPlaySetBeaconEffectPacketId();
-
-	public int getInPlayUpdateCommandBlockPacketId();
-
-	public int getInPlayUpdateCommandMinecartPacketId();
-
-	public int getInPlayUpdateStructureBlockPacketId();
-
-	public int getInPlayJigsawUpdatePacketId();
-
-	public int getInPlayJigsawGenerateStructurePacketId();
-
-	public int getInPlaySyncPong();
 
 }

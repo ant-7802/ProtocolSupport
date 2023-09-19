@@ -4,25 +4,27 @@ import java.io.IOException;
 import java.nio.channels.ClosedChannelException;
 import java.text.MessageFormat;
 import java.util.HashSet;
-import java.util.List;
 
 import org.bukkit.Bukkit;
+import org.bukkit.plugin.java.JavaPlugin;
 
+import io.netty.channel.ChannelDuplexHandler;
 import io.netty.channel.ChannelHandlerContext;
+import io.netty.channel.ChannelPromise;
 import io.netty.channel.unix.Errors.NativeIoException;
 import io.netty.handler.timeout.ReadTimeoutException;
 import protocolsupport.ProtocolSupport;
-import protocolsupport.ProtocolSupportFileLog;
 import protocolsupport.api.events.ConnectionCloseEvent;
 import protocolsupport.api.events.ConnectionOpenEvent;
+import protocolsupport.api.events.PlayerDisconnectEvent;
 import protocolsupport.protocol.ConnectionImpl;
 import protocolsupport.protocol.storage.ProtocolStorage;
-import protocolsupport.utils.netty.MessageToMessageCodec;
 import protocolsupport.zplatform.ServerPlatform;
+import protocolsupport.zplatform.network.NetworkManagerWrapper;
 
-public class LogicHandler extends MessageToMessageCodec<Object, Object> {
+public class LogicHandler extends ChannelDuplexHandler {
 
-	protected static final HashSet<Class<? extends Throwable>> ignoreExceptions = new HashSet<>();
+	private static final HashSet<Class<? extends Throwable>> ignoreExceptions = new HashSet<>();
 	static {
 		ignoreExceptions.add(ClosedChannelException.class);
 		ignoreExceptions.add(ReadTimeoutException.class);
@@ -30,52 +32,49 @@ public class LogicHandler extends MessageToMessageCodec<Object, Object> {
 		ignoreExceptions.add(NativeIoException.class);
 	}
 
-	protected final ConnectionImpl connection;
-	protected final Class<?> nativePacketSuperClass;
-	public LogicHandler(ConnectionImpl connection, Class<?> nativePacketSuperClass) {
+	private final ConnectionImpl connection;
+	public LogicHandler(ConnectionImpl connection) {
 		this.connection = connection;
-		this.nativePacketSuperClass = nativePacketSuperClass;
 	}
 
 	@Override
-	protected void decode(ChannelHandlerContext ctx, Object packet, List<Object> out) throws Exception {
-		if (!nativePacketSuperClass.isInstance(packet)) {
-			out.add(packet);
-		} else {
-			connection.handlePacketReceive(packet, out);
+	public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
+		msg = connection.handlePacketReceive(msg);
+		if (msg == null) {
+			return;
 		}
+		super.channelRead(ctx, msg);
 	}
 
 	@Override
-	protected void encode(ChannelHandlerContext ctx, Object packet, List<Object> out) throws Exception {
-		if (!nativePacketSuperClass.isInstance(packet)) {
-			out.add(packet);
-		} else {
-			connection.handlePacketSend(packet, out);
+	public void write(ChannelHandlerContext ctx, Object msg, ChannelPromise promise) throws Exception {
+		msg = connection.handlePacketSend(msg);
+		if (msg == null) {
+			promise.setSuccess();
+			return;
 		}
+		super.write(ctx, msg, promise);
 	}
 
 	@Override
 	public void exceptionCaught(ChannelHandlerContext ctx, Throwable e) throws Exception {
-		boolean ignored = ignoreExceptions.contains(e.getClass());
-		if (!ignored && ProtocolSupportFileLog.isEnabled()) {
-			ProtocolSupportFileLog.logWarningError("Network exception occured(connection: " + connection + ")", e);
-		}
-		if (ServerPlatform.get().getMiscUtils().isDebugging() && !ignored) {
+		if (ServerPlatform.get().getMiscUtils().isDebugging() && !ignoreExceptions.contains(e.getClass())) {
 			super.exceptionCaught(ctx, new NetworkException(e, connection));
 		} else {
 			super.exceptionCaught(ctx, e);
 		}
 	}
 
-	protected static final class NetworkException extends Exception {
+	private static final class NetworkException extends Exception {
 		private static final long serialVersionUID = 1L;
 
 		public NetworkException(Throwable original, ConnectionImpl connection) {
 			super(MessageFormat.format(
-				"ProtocolSupport(buildinfo: {0}): Network exception occured(connection: {1})",
-				ProtocolSupport.getInstance().getBuildInfo(),
-				connection
+				"ProtocolSupport(buildinfo: {0}): Network exception occured(address: {1}, username: {2}, version: {3})",
+				JavaPlugin.getPlugin(ProtocolSupport.class).getBuildInfo(),
+				connection.getAddress(),
+				connection.getNetworkManagerWrapper().getUserName(),
+				connection.getVersion()
 			), original);
 		}
 	}
@@ -89,15 +88,13 @@ public class LogicHandler extends MessageToMessageCodec<Object, Object> {
 	@Override
 	public void channelInactive(ChannelHandlerContext ctx) throws Exception {
 		super.channelInactive(ctx);
-		Bukkit.getPluginManager().callEvent(new ConnectionCloseEvent(connection, !Bukkit.isPrimaryThread()));
-
-	}
-
-	@Override
-	public void handlerRemoved(ChannelHandlerContext ctx) throws Exception {
-		super.handlerRemoved(ctx);
-		connection.destroy();
-		ProtocolStorage.removeConnection(connection.getRawAddress());
+		NetworkManagerWrapper networkmanager = connection.getNetworkManagerWrapper();
+		String username = networkmanager.getUserName();
+		if (username != null) {
+			Bukkit.getPluginManager().callEvent(new PlayerDisconnectEvent(connection, username));
+		}
+		Bukkit.getPluginManager().callEvent(new ConnectionCloseEvent(connection));
+		ProtocolStorage.removeConnection(networkmanager.getRawAddress());
 	}
 
 }

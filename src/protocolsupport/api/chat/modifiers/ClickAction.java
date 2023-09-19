@@ -3,7 +3,7 @@ package protocolsupport.api.chat.modifiers;
 import java.net.MalformedURLException;
 import java.net.URL;
 
-import protocolsupport.utils.reflection.ReflectionUtils;
+import protocolsupport.utils.Utils;
 
 public class ClickAction {
 
@@ -36,17 +36,12 @@ public class ClickAction {
 	}
 
 	@Override
-	public ClickAction clone() {
-		return new ClickAction(type, value);
-	}
-
-	@Override
 	public String toString() {
-		return ReflectionUtils.toStringAllFields(this);
+		return Utils.toStringAllFields(this);
 	}
 
-	public enum Type {
-		OPEN_URL, OPEN_FILE, RUN_COMMAND, SUGGEST_COMMAND, CHANGE_PAGE, COPY_TO_CLIPBOARD;
+	public static enum Type {
+		OPEN_URL, OPEN_FILE, RUN_COMMAND, TWITCH_USER_INFO, SUGGEST_COMMAND, CHANGE_PAGE;
 	}
 
 }

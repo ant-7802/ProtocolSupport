@@ -2,18 +2,15 @@ package protocolsupport.protocol.pipeline.common;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
-import protocolsupport.protocol.pipeline.IPacketFrameEncoder;
+import protocolsupport.protocol.pipeline.IPacketPrepender;
 
-public class NoOpFrameEncoder implements IPacketFrameEncoder {
-
-	@Override
-	public void encodeFrame(ChannelHandlerContext ctx, ByteBuf input, ByteBuf output) {
-		output.writeBytes(input);
-	}
+public class NoOpFrameEncoder implements IPacketPrepender {
 
 	@Override
-	public ByteBuf allocBuffer(ChannelHandlerContext ctx, ByteBuf in, boolean preferDirect) {
-		return ctx.alloc().heapBuffer(in.readableBytes());
+	public void prepend(ChannelHandlerContext ctx, ByteBuf input, ByteBuf output) {
+		int readableBytes = input.readableBytes();
+		output.ensureWritable(readableBytes);
+		output.writeBytes(input, input.readerIndex(), readableBytes);
 	}
 
 }

@@ -8,14 +8,14 @@ import protocolsupport.api.Connection;
 
 public abstract class ConnectionEvent extends Event {
 
-	protected final Connection connection;
+	private final Connection connection;
 
-	protected ConnectionEvent(Connection connection, boolean isAsync) {
+	public ConnectionEvent(Connection connection, boolean isAsync) {
 		super(isAsync);
 		this.connection = connection;
 	}
 
-	protected ConnectionEvent(Connection connection) {
+	public ConnectionEvent(Connection connection) {
 		this(connection, true);
 	}
 

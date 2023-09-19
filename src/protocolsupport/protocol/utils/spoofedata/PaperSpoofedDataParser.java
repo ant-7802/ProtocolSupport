@@ -1,47 +1,34 @@
 package protocolsupport.protocol.utils.spoofedata;
 
-import java.lang.reflect.Type;
-import java.util.Collection;
+import com.destroystokyo.paper.event.player.PlayerHandshakeEvent;
 
 import org.bukkit.Bukkit;
 
-import com.destroystokyo.paper.event.player.PlayerHandshakeEvent;
-import com.google.gson.reflect.TypeToken;
+import protocolsupport.api.events.PlayerPropertiesResolveEvent.ProfileProperty;
+import protocolsupport.utils.Utils;
 
-import net.kyori.adventure.text.serializer.gson.GsonComponentSerializer;
-import protocolsupport.api.Connection;
-import protocolsupport.api.utils.ProfileProperty;
-import protocolsupport.protocol.codec.chat.ChatCodec;
-import protocolsupport.utils.JsonUtils;
+import java.util.UUID;
+import java.util.function.Function;
 
-public class PaperSpoofedDataParser extends SpoofedDataParser {
-
-	protected final BungeeCordSpoofedDataParser bungeecordparser;
-	public PaperSpoofedDataParser(BungeeCordSpoofedDataParser bungeecordparser) {
-		this.bungeecordparser = bungeecordparser;
-	}
-
-	protected static final Type properties_type = new TypeToken<Collection<ProfileProperty>>() {}.getType();
+public class PaperSpoofedDataParser implements Function<String, SpoofedData> {
 
 	@Override
-	protected SpoofedData parse(Connection connection, String data, boolean proxyEnabled) {
+	public SpoofedData apply(String hostname) {
 		if (PlayerHandshakeEvent.getHandlerList().getRegisteredListeners().length != 0) {
-			PlayerHandshakeEvent handshakeEvent = new PlayerHandshakeEvent(data, connection.getRawAddress().getHostString(), !proxyEnabled);
+			PlayerHandshakeEvent handshakeEvent = new PlayerHandshakeEvent(hostname, false);
 			Bukkit.getPluginManager().callEvent(handshakeEvent);
 			if (!handshakeEvent.isCancelled()) {
 				if (handshakeEvent.isFailed()) {
-					return SpoofedData.createFailed(ChatCodec.deserializeTree(GsonComponentSerializer.gson().serializeToTree(handshakeEvent.failMessage())));
+					return new SpoofedData(handshakeEvent.getFailMessage());
 				}
-				return SpoofedData.create(
-					handshakeEvent.getServerHostname(),
-					handshakeEvent.getSocketAddressHostname(),
-					handshakeEvent.getUniqueId(),
-					JsonUtils.GSON.fromJson(handshakeEvent.getPropertiesJson(), properties_type)
-				);
+				String spoofedHostname = handshakeEvent.getServerHostname();
+				String spoofedAddress = handshakeEvent.getSocketAddressHostname();
+				UUID uuid = handshakeEvent.getUniqueId();
+				ProfileProperty[] properties = Utils.GSON.fromJson(handshakeEvent.getPropertiesJson(), ProfileProperty[].class);
+				return new SpoofedData(spoofedHostname, spoofedAddress, uuid, properties);
 			}
 		}
-
-		return bungeecordparser.parse(connection, data, proxyEnabled);
+		return null;
 	}
 
 }

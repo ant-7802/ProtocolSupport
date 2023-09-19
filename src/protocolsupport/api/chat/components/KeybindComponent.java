@@ -2,15 +2,11 @@ package protocolsupport.api.chat.components;
 
 import java.text.MessageFormat;
 
-import protocolsupport.protocol.utils.minecraftdata.MinecraftKeybindData;
+import protocolsupport.protocol.utils.minecraftdata.KeybindData;
 
-/**
- * Chat component that displays the client's current keybind for the specified key
- */
 public class KeybindComponent extends BaseComponent {
 
-	protected final String keybind;
-
+	private final String keybind;
 	public KeybindComponent(String keybind) {
 		this.keybind = keybind;
 	}
@@ -21,13 +17,8 @@ public class KeybindComponent extends BaseComponent {
 
 	@Override
 	public String getValue(String locale) {
-		String keybindtext = MinecraftKeybindData.getKey(keybind);
+		String keybindtext = KeybindData.getKey(keybind);
 		return MessageFormat.format("{0}({1})", keybind, keybindtext != null ? keybindtext : "unknown");
-	}
-
-	@Override
-	public KeybindComponent cloneThis() {
-		return new KeybindComponent(keybind);
 	}
 
 }

@@ -1,65 +1,48 @@
 package protocolsupport.protocol.typeremapper.utils;
 
-import java.text.MessageFormat;
 import java.util.EnumMap;
-
-import javax.annotation.Nonnull;
 
 import protocolsupport.api.ProtocolVersion;
 import protocolsupport.protocol.typeremapper.utils.SkippingTable.EnumSkippingTable;
 import protocolsupport.protocol.typeremapper.utils.SkippingTable.GenericSkippingTable;
 import protocolsupport.protocol.typeremapper.utils.SkippingTable.IntSkippingTable;
-import protocolsupport.protocol.utils.ProtocolVersionsHelper;
+import protocolsupport.utils.Utils;
 
 public abstract class SkippingRegistry<T extends SkippingTable> {
 
-	protected final EnumMap<ProtocolVersion, T> registry = new EnumMap<>(ProtocolVersion.class);
+	private final EnumMap<ProtocolVersion, T> registry = new EnumMap<>(ProtocolVersion.class);
 
-	protected SkippingRegistry() {
-		clear();
-	}
-
-	public void clear() {
-		for (ProtocolVersion version : ProtocolVersionsHelper.ALL) {
-			registry.put(version, createTable());
-		}
-	}
-
-	public @Nonnull T getTable(@Nonnull ProtocolVersion version) {
-		T table = registry.get(version);
-		if (table == null) {
-			throw new IllegalArgumentException(MessageFormat.format("Missing skipping table for version {0}", version));
-		}
-		return table;
+	public T getTable(ProtocolVersion version) {
+		return Utils.getFromMapOrCreateDefault(registry, version, createTable());
 	}
 
 	protected abstract T createTable();
 
-	public abstract static class IntSkippingRegistry<T extends IntSkippingTable> extends SkippingRegistry<T> {
+	public static abstract class IntSkippingRegistry<T extends IntSkippingTable> extends SkippingRegistry<T> {
 
-		public void register(int id, ProtocolVersion... versions) {
+		public void registerSkipEntry(int id, ProtocolVersion... versions) {
 			for (ProtocolVersion version : versions) {
-				getTable(version).set(id);
+				getTable(version).setSkip(id);
 			}
 		}
 
 	}
 
-	public abstract static class EnumSkippingRegistry<T extends Enum<T>, R extends EnumSkippingTable<T>> extends SkippingRegistry<R> {
+	public static abstract class EnumSkippingRegistry<T extends Enum<T>, R extends EnumSkippingTable<T>> extends SkippingRegistry<R> {
 
-		public void register(T id, ProtocolVersion... versions) {
+		public void registerSkipEntry(T id, ProtocolVersion... versions) {
 			for (ProtocolVersion version : versions) {
-				getTable(version).set(id);
+				getTable(version).setSkip(id);
 			}
 		}
 
 	}
 
-	public abstract static class GenericSkippingRegistry<T, R extends GenericSkippingTable<T>> extends SkippingRegistry<R> {
+	public static abstract class GenericSkippingRegistry<T, R extends GenericSkippingTable<T>> extends SkippingRegistry<R> {
 
-		public void register(T id, ProtocolVersion... versions) {
+		public void registerSkipEntry(T id, ProtocolVersion... versions) {
 			for (ProtocolVersion version : versions) {
-				getTable(version).set(id);
+				getTable(version).setSkip(id);
 			}
 		}
 

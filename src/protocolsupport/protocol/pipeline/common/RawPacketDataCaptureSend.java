@@ -15,7 +15,8 @@ public class RawPacketDataCaptureSend extends ChannelOutboundHandlerAdapter {
 
 	@Override
 	public void write(ChannelHandlerContext ctx, Object msg, ChannelPromise promise) throws Exception {
-		if (msg instanceof ByteBuf data) {
+		if (msg instanceof ByteBuf) {
+			ByteBuf data = (ByteBuf) msg;
 			msg = connection.handleRawPacketSend(data);
 			if (msg == null) {
 				promise.setSuccess();

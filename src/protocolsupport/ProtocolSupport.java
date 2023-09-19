@@ -1,27 +1,44 @@
 package protocolsupport;
 
 import java.io.IOException;
-import java.io.Reader;
 import java.text.MessageFormat;
 import java.util.Properties;
 import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import org.bukkit.Bukkit;
-import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
 
+import protocolsupport.api.ProtocolVersion;
 import protocolsupport.commands.CommandHandler;
-import protocolsupport.listeners.LocaleUseLoader;
-import protocolsupport.listeners.PotionEffectAmplifierClamp;
+import protocolsupport.listeners.FeatureEmulation;
+import protocolsupport.listeners.MultiplePassengersRestrict;
 import protocolsupport.listeners.ReloadCommandBlocker;
-import protocolsupport.listeners.TabAPIHandler;
-import protocolsupport.listeners.emulation.BlockPlaceSelfSoundEmulation;
-import protocolsupport.listeners.emulation.DamageHurtEffectEmulation;
-import protocolsupport.listeners.emulation.LeaveVehicleOnCrouchEmulation;
-import protocolsupport.listeners.emulation.LevitationSlowFallingEmulation;
-import protocolsupport.listeners.emulation.UpdateHandSlotOnItemDropEmulation;
-import protocolsupport.utils.ResourceUtils;
+import protocolsupport.protocol.packet.ClientBoundPacket;
+import protocolsupport.protocol.packet.ServerBoundPacket;
+import protocolsupport.protocol.packet.handler.AbstractLoginListener;
+import protocolsupport.protocol.pipeline.initial.InitialPacketDecoder;
+import protocolsupport.protocol.typeremapper.id.IdRemapper;
+import protocolsupport.protocol.typeremapper.id.IdSkipper;
+import protocolsupport.protocol.typeremapper.itemstack.ItemStackRemapper;
+import protocolsupport.protocol.typeremapper.legacy.LegacyEffect;
+import protocolsupport.protocol.typeremapper.legacy.LegacyEntityType;
+import protocolsupport.protocol.typeremapper.legacy.LegacyPotion;
+import protocolsupport.protocol.typeremapper.mapcolor.MapColorRemapper;
+import protocolsupport.protocol.typeremapper.sound.SoundRemapper;
+import protocolsupport.protocol.typeremapper.tileentity.TileNBTRemapper;
+import protocolsupport.protocol.typeremapper.watchedentity.remapper.DataWatcherObjectIndex;
+import protocolsupport.protocol.typeremapper.watchedentity.remapper.SpecificRemapper;
+import protocolsupport.protocol.utils.ProtocolVersionsHelper;
+import protocolsupport.protocol.utils.datawatcher.DataWatcherObjectIdRegistry;
+import protocolsupport.protocol.utils.i18n.I18NData;
+import protocolsupport.protocol.utils.minecraftdata.ItemData;
+import protocolsupport.protocol.utils.minecraftdata.KeybindData;
+import protocolsupport.protocol.utils.minecraftdata.PotionData;
+import protocolsupport.protocol.utils.minecraftdata.SoundData;
+import protocolsupport.protocol.utils.types.NetworkEntityType;
+import protocolsupport.utils.Utils;
+import protocolsupport.utils.netty.Allocator;
+import protocolsupport.utils.netty.Compressor;
 import protocolsupport.zplatform.ServerPlatform;
 
 public class ProtocolSupport extends JavaPlugin {
@@ -34,7 +51,6 @@ public class ProtocolSupport extends JavaPlugin {
 
 	public ProtocolSupport() {
 		instance = this;
-		System.setProperty("java.awt.headless", "true");
 	}
 
 	private BuildInfo buildinfo;
@@ -43,153 +59,92 @@ public class ProtocolSupport extends JavaPlugin {
 		return buildinfo;
 	}
 
-	protected static final String supported_platform_version = "1.18.2";
-
-
-	private boolean loaded = false;
-
 	@Override
 	public void onLoad() {
 		try {
-			buildinfo = new BuildInfo(ResourceUtils.getAsBufferedReader("buildinfo"));
-		} catch (Throwable t) {
-			getLogger().warning("Unable to load buildinfo");
 			buildinfo = new BuildInfo();
-		}
-		if (ProtocolSupportFileLog.isEnabled()) {
-			ProtocolSupportFileLog.logInfoMessage("Server version: " + Bukkit.getVersion());
-			ProtocolSupportFileLog.logInfoMessage("ProtocolSupport version: " + buildinfo.toString());
-		}
-		try {
-			ServerPlatform.detect();
 		} catch (Throwable t) {
-			BIG_ERROR_THAT_ANYONE_CAN_SEE("Unsupported platform or version " + Bukkit.getVersion());
-			getLogger().log(Level.SEVERE, "Platform init failed", t);
-			return;
+			getLogger().severe("Unable to load buildinfo, make sure you built this version using Gradle");
+			Bukkit.shutdown();
 		}
-		getLogger().info(() -> MessageFormat.format("Detected {0} server implementation type", ServerPlatform.get().getIdentifier().getName()));
-		if (!ServerPlatform.get().getMiscUtils().getVersionName().equals(supported_platform_version)) {
-			BIG_ERROR_THAT_ANYONE_CAN_SEE("Unsupported server minecraft version " + ServerPlatform.get().getMiscUtils().getVersionName());
+		if (!ServerPlatform.detect()) {
+			getLogger().severe("Unsupported server implementation type or version");
+			Bukkit.shutdown();
 			return;
+		} else {
+			getLogger().info(MessageFormat.format("Detected {0} server implementation type", ServerPlatform.get().getIdentifier().getName()));
 		}
-		try {
-			ServerPlatform.get().getInjector().onLoad();
-		} catch (Throwable t) {
-			getLogger().log(Level.SEVERE, "Error when loading, shutting down", t);
+		if (!ServerPlatform.get().getMiscUtils().getVersionName().equals("1.12.2")) {
+			getLogger().severe("Unsupported server version " + ServerPlatform.get().getMiscUtils().getVersionName());
 			Bukkit.shutdown();
 			return;
 		}
 		try {
-			ResourceUtils.getAsBufferedReader("preload").lines().forEach(name -> {
-				try {
-					Class.forName(name);
-				} catch (ClassNotFoundException e) {
-					getLogger().log(Level.WARNING, "Class is in preload list, but wasn''t found", e);
-				}
-			});
+			Class.forName(ProtocolVersion.class.getName());
+			Class.forName(ProtocolVersionsHelper.class.getName());
+			Class.forName(NetworkEntityType.class.getName());
+			Class.forName(DataWatcherObjectIndex.class.getName());
+			Class.forName(DataWatcherObjectIdRegistry.class.getName());
+			Class.forName(Allocator.class.getName());
+			Class.forName(ItemData.class.getName());
+			Class.forName(PotionData.class.getName());
+			Class.forName(SoundData.class.getName());
+			Class.forName(KeybindData.class.getName());
+			Class.forName(I18NData.class.getName());
+			Class.forName(Compressor.class.getName());
+			Class.forName(ServerBoundPacket.class.getName());
+			Class.forName(ClientBoundPacket.class.getName());
+			Class.forName(InitialPacketDecoder.class.getName());
+			Class.forName(AbstractLoginListener.class.getName());
+			Class.forName(SoundRemapper.class.getName());
+			Class.forName(IdSkipper.class.getName());
+			Class.forName(SpecificRemapper.class.getName());
+			Class.forName(IdRemapper.class.getName());
+			Class.forName(ItemStackRemapper.class.getName());
+			Class.forName(TileNBTRemapper.class.getName());
+			Class.forName(MapColorRemapper.class.getName());
+			Class.forName(LegacyPotion.class.getName());
+			Class.forName(LegacyEntityType.class.getName());
+			Class.forName(LegacyEffect.class.getName());
+			ServerPlatform.get().inject();
 		} catch (Throwable t) {
-			getLogger().log(Level.WARNING, "Unable to preload classes", t);
+			getLogger().log(Level.SEVERE, "Error when loading, make sure you are using supported server version", t);
+			Bukkit.shutdown();
 		}
-		loaded = true;
-	}
-
-	protected void BIG_ERROR_THAT_ANYONE_CAN_SEE(String message) {
-		Logger logger = getLogger();
-		logger.severe("╔══════════════════════════════════════════════════════════════════╗");
-		logger.severe("║                               ERROR                               ");
-		logger.severe("║   " + message                                                      );
-		logger.severe("║                                                                   ");
-		logger.severe("║   This version of plugin only supports                            ");
-		logger.severe("║   server minecraft version " + supported_platform_version          );
-		logger.severe("║   and following platforms:                                        ");
-		logger.severe("║   - Spigot (https://www.spigotmc.org/)                            ");
-		logger.severe("║   - Paper (https://papermc.io/)                                   ");
-		logger.severe("║                                                                   ");
-		logger.severe("║                                                                   ");
-		logger.severe("║       https://github.com/ProtocolSupport/ProtocolSupport/         ");
-		logger.severe("╚══════════════════════════════════════════════════════════════════╝");
 	}
 
 	@Override
 	public void onEnable() {
-		if (!loaded) {
-			return;
-		}
-		ServerPlatform.get().getInjector().onEnable();
-
 		getCommand("protocolsupport").setExecutor(new CommandHandler());
-
-		PluginManager pluginmanager = getServer().getPluginManager();
-		pluginmanager.registerEvents(new TabAPIHandler(), this);
-		pluginmanager.registerEvents(new ReloadCommandBlocker(), this);
-		pluginmanager.registerEvents(new LocaleUseLoader(), this);
-		pluginmanager.registerEvents(new PotionEffectAmplifierClamp(), this);
-		pluginmanager.registerEvents(new BlockPlaceSelfSoundEmulation(), this);
-		pluginmanager.registerEvents(new DamageHurtEffectEmulation(), this);
-		pluginmanager.registerEvents(new LeaveVehicleOnCrouchEmulation(), this);
-		pluginmanager.registerEvents(new UpdateHandSlotOnItemDropEmulation(), this);
-		new LevitationSlowFallingEmulation().runTaskTimer(this, 1, 1);
+		getServer().getPluginManager().registerEvents(new FeatureEmulation(), this);
+		getServer().getPluginManager().registerEvents(new ReloadCommandBlocker(), this);
+		getServer().getPluginManager().registerEvents(new MultiplePassengersRestrict(), this);
 	}
 
 	@Override
 	public void onDisable() {
 		Bukkit.shutdown();
-		if (!loaded) {
-			return;
-		}
-		ServerPlatform.get().getInjector().onDisable();
-	}
-
-	public static class BuildInfo {
-
-		public final String buildtime;
-		public final String buildhost;
-		public final String buildnumber;
-		public final String buildgit;
-
-		public BuildInfo(Reader reader) throws IOException {
-			Properties properties = new Properties();
-			properties.load(reader);
-			buildtime = properties.getProperty("buildtime");
-			buildhost = properties.getProperty("buildhost");
-			buildnumber = properties.getProperty("buildnumber");
-			buildgit = properties.getProperty("buildgit");
-		}
-
-		public BuildInfo() {
-			buildtime = "unknown";
-			buildhost = "unknown";
-			buildnumber = "unknown";
-			buildgit = "unknown";
-		}
-
-		@Override
-		public String toString() {
-			return "[buildtime=" + buildtime + ", buildhost=" + buildhost + ", buildnumber=" + buildnumber + ", buildgit=" + buildgit + "]";
-		}
-
-	}
-
-
-	public static Logger getStaticLogger() {
-		ProtocolSupport instance = getInstance();
-		return instance != null ? instance.getLogger() : Logger.getLogger("ProtocolSupport");
 	}
 
 	public static void logInfo(String message) {
-		getStaticLogger().info(message);
+		ProtocolSupport.getInstance().getLogger().info(message);
 	}
 
-	public static void logWarning(String message) {
-		getStaticLogger().warning(message);
-	}
-
-	public static void logErrorSevere(String message, Throwable t) {
-		getStaticLogger().log(Level.SEVERE, message, t);
-	}
-
-	public static void logErrorWarning(String message, Throwable t) {
-		getStaticLogger().log(Level.WARNING, message, t);
+	public static class BuildInfo {
+		public final String buildtime;
+		public final String buildhost;
+		public final String buildnumber;
+		public BuildInfo() throws IOException {
+			Properties properties = new Properties();
+			properties.load(Utils.getResource("buildinfo"));
+			buildtime = properties.getProperty("buildtime");
+			buildhost = properties.getProperty("buildhost");
+			buildnumber = properties.getProperty("buildnumber");
+		}
+		@Override
+		public String toString() {
+			return Utils.toStringAllFields(this);
+		}
 	}
 
 }

@@ -1,39 +1,35 @@
 package protocolsupport.protocol.utils.spoofedata;
 
-import java.util.Collection;
 import java.util.UUID;
 
-import protocolsupport.api.chat.components.BaseComponent;
-import protocolsupport.api.utils.ProfileProperty;
-import protocolsupport.utils.reflection.ReflectionUtils;
+import protocolsupport.api.events.PlayerPropertiesResolveEvent.ProfileProperty;
 
 public class SpoofedData {
-
-	public static SpoofedData createFailed(BaseComponent failmessage) {
-		return new SpoofedData(null, null, null, null, failmessage);
-	}
-
-	public static SpoofedData createEmpty(String hostname) {
-		return new SpoofedData(hostname, null, null, null, null);
-	}
-
-	public static SpoofedData create(String hostname, String address, UUID uuid, Collection<ProfileProperty> properties) {
-		return new SpoofedData(hostname, address, uuid, properties, null);
-	}
 
 	private final String hostname;
 	private final String address;
 	private final UUID uuid;
-	private final Collection<ProfileProperty> properties;
+	private final ProfileProperty[] properties;
 
-	private final BaseComponent failMessage;
+	private final boolean failed;
+	private final String failMessage;
 
-	protected SpoofedData(String hostname, String address, UUID uuid, Collection<ProfileProperty> properties, BaseComponent failmessage) {
+	public SpoofedData(String hostname, String address, UUID uuid, ProfileProperty[] properties) {
 		this.hostname = hostname;
 		this.address = address;
 		this.uuid = uuid;
 		this.properties = properties;
-		this.failMessage = failmessage;
+		this.failed = false;
+		this.failMessage = null;
+	}
+
+	public SpoofedData(String failMessage) {
+		this.hostname = null;
+		this.address = null;
+		this.uuid = null;
+		this.properties = null;
+		this.failed = true;
+		this.failMessage = failMessage;
 	}
 
 	public String getHostname() {
@@ -48,21 +44,16 @@ public class SpoofedData {
 		return uuid;
 	}
 
-	public Collection<ProfileProperty> getProperties() {
+	public ProfileProperty[] getProperties() {
 		return properties;
 	}
 
 	public boolean isFailed() {
-		return failMessage != null;
+		return failed;
 	}
 
-	public BaseComponent getFailMessage() {
+	public String getFailMessage() {
 		return failMessage;
-	}
-
-	@Override
-	public String toString() {
-		return ReflectionUtils.toStringAllFields(this);
 	}
 
 }

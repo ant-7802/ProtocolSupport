@@ -1,33 +1,28 @@
 package protocolsupport.protocol.packet.middle;
 
-import protocolsupport.api.ProtocolVersion;
-import protocolsupport.protocol.pipeline.IPacketDataIO;
-import protocolsupport.protocol.storage.netcache.NetworkDataCache;
-import protocolsupport.utils.reflection.ReflectionUtils;
+import protocolsupport.api.Connection;
+import protocolsupport.protocol.storage.NetworkDataCache;
+import protocolsupport.utils.Utils;
+import protocolsupportbuildprocessor.annotations.NeedsNoArgConstructor;
 
-public abstract class MiddlePacket implements IMiddlePacket {
+@NeedsNoArgConstructor
+public abstract class MiddlePacket {
 
-	protected final IPacketDataIO io;
-	protected final NetworkDataCache cache;
-	protected final ProtocolVersion version;
+	protected Connection connection;
 
-	protected MiddlePacket(IMiddlePacketInit init) {
-		this.io = init.getIO();
-		this.cache = init.getCache();
-		this.version = io.getVersion();
+	public final void setConnection(Connection connection) {
+		this.connection = connection;
+	}
+
+	protected NetworkDataCache cache;
+
+	public void setSharedStorage(NetworkDataCache sharedstorage) {
+		this.cache = sharedstorage;
 	}
 
 	@Override
 	public String toString() {
-		return ReflectionUtils.toStringAllFields(this);
-	}
-
-	public static interface IMiddlePacketInit {
-
-		public IPacketDataIO getIO();
-
-		public NetworkDataCache getCache();
-
+		return Utils.toStringAllFields(this);
 	}
 
 }

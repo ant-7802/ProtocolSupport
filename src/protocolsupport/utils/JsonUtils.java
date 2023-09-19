@@ -1,108 +1,77 @@
 package protocolsupport.utils;
 
-import java.io.Reader;
-
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
-
-import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
 import com.google.gson.JsonPrimitive;
 import com.google.gson.JsonSyntaxException;
 
 public class JsonUtils {
 
-	private JsonUtils() {
-	}
-
-	public static void setJsonValueIfNotNull(@Nonnull JsonObject jsonElement, @Nonnull String name, @Nullable Boolean value) {
+	public static void setIfNotNull(JsonObject jsonElement, String name, Boolean value) {
 		if (value != null) {
 			jsonElement.addProperty(name, value);
 		}
 	}
 
-	public static boolean hasJsonElement(@Nullable JsonObject jsonObject, @Nonnull String name) {
+	public static boolean hasObject(JsonObject jsonObject, String name) {
 		return (jsonObject != null) && (jsonObject.get(name) != null);
 	}
 
-	public static boolean hasJsonArray(@Nullable JsonObject jsonObject, @Nonnull String name) {
-		return hasJsonElement(jsonObject, name) && jsonObject.get(name).isJsonArray();
+	public static boolean isJsonArray(JsonObject jsonObject, String name) {
+		return hasObject(jsonObject, name) && jsonObject.get(name).isJsonArray();
 	}
 
-	public static @Nonnull JsonArray getAsJsonArray(@Nonnull JsonElement jsonElement, @Nonnull String name) {
+	public static JsonArray getAsJsonArray(JsonElement jsonElement, String name) {
 		if (jsonElement.isJsonArray()) {
 			return jsonElement.getAsJsonArray();
 		}
 		throw new JsonSyntaxException("Expected " + name + " to be a JsonArray, was " + toString(jsonElement));
 	}
 
-	public static @Nonnull JsonArray getJsonArray(@Nonnull JsonObject jsonObject, @Nonnull String name) {
+	public static JsonArray getJsonArray(JsonObject jsonObject, String name) {
 		if (jsonObject.has(name)) {
 			return getAsJsonArray(jsonObject.get(name), name);
 		}
 		throw new JsonSyntaxException("Missing " + name + ", expected to find a JsonArray");
 	}
 
-	public static @Nonnull String getAsString(@Nonnull JsonElement jsonElement, @Nonnull String name) {
+	public static String getAsString(JsonElement jsonElement, String name) {
 		if (jsonElement.isJsonPrimitive()) {
 			return jsonElement.getAsString();
 		}
 		throw new JsonSyntaxException("Expected " + name + " to be a string, was " + toString(jsonElement));
 	}
 
-	public static @Nonnull String getString(@Nonnull JsonObject jsonObject, @Nonnull String name) {
+	public static String getString(JsonObject jsonObject, String name) {
 		if (jsonObject.has(name)) {
 			return getAsString(jsonObject.get(name), name);
 		}
 		throw new JsonSyntaxException("Missing " + name + ", expected to find a string");
 	}
 
-	public static @Nonnull float getAsFloat(@Nonnull JsonElement jsonElement, @Nonnull String name) {
-		if (jsonElement.isJsonPrimitive() && jsonElement.getAsJsonPrimitive().isNumber()) {
-			return jsonElement.getAsFloat();
-		}
-		throw new JsonSyntaxException("Expected " + name + " to be a Float, was " + toString(jsonElement));
-	}
-
-	public static float getFloat(@Nonnull JsonObject jsonObject, @Nonnull String name) {
-		if (jsonObject.has(name)) {
-			return getAsFloat(jsonObject.get(name), name);
-		}
-		throw new JsonSyntaxException("Missing " + name + ", expected to find a Float");
-	}
-
-	public static int getAsInt(@Nonnull JsonElement jsonElement, @Nonnull String name) {
+	public static int getAsInt(JsonElement jsonElement, String s) {
 		if (jsonElement.isJsonPrimitive() && jsonElement.getAsJsonPrimitive().isNumber()) {
 			return jsonElement.getAsInt();
 		}
-		throw new JsonSyntaxException("Expected " + name + " to be a Int, was " + toString(jsonElement));
+		throw new JsonSyntaxException("Expected " + s + " to be a Int, was " + toString(jsonElement));
 	}
 
-	public static int getInt(@Nonnull JsonObject jsonObject, @Nonnull String name) {
-		if (jsonObject.has(name)) {
-			return getAsInt(jsonObject.get(name), name);
+	public static int getInt(JsonObject jsonObject, String s) {
+		if (jsonObject.has(s)) {
+			return getAsInt(jsonObject.get(s), s);
 		}
-		throw new JsonSyntaxException("Missing " + name + ", expected to find a Int");
+		throw new JsonSyntaxException("Missing " + s + ", expected to find a Int");
 	}
 
-	public static @Nonnull JsonObject getJsonObject(@Nonnull JsonObject jsonObject, @Nonnull String name) {
-		if (jsonObject.has(name)) {
-			return getAsJsonObject(jsonObject.get(name), name);
-		}
-		throw new JsonSyntaxException("Missing " + name + ", expected to find a JsonObject");
-	}
-
-	public static @Nonnull JsonObject getAsJsonObject(@Nonnull JsonElement jsonElement, @Nonnull String name) {
+	public static JsonObject getAsJsonObject(JsonElement jsonElement, String name) {
 		if (jsonElement.isJsonObject()) {
 			return jsonElement.getAsJsonObject();
 		}
 		throw new JsonSyntaxException("Expected " + name + " to be a JsonObject, was " + toString(jsonElement));
 	}
 
-	private static @Nonnull String toString(@Nullable JsonElement jsonElement) {
+	private static String toString(JsonElement jsonElement) {
 		String abbreviateMiddle = String.valueOf(jsonElement);
 		if (jsonElement == null) {
 			return "null (missing)";
@@ -126,16 +95,6 @@ public class JsonUtils {
 			}
 		}
 		return abbreviateMiddle;
-	}
-
-	public static final Gson GSON = new Gson();
-
-	public static @Nonnull JsonObject readJsonObject(@Nonnull Reader reader) {
-		return JsonParser.parseReader(reader).getAsJsonObject();
-	}
-
-	public static @Nonnull JsonArray readJsonArray(@Nonnull Reader reader) {
-		return JsonParser.parseReader(reader).getAsJsonArray();
 	}
 
 }

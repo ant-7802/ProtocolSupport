@@ -1,17 +1,12 @@
 package protocolsupport.protocol.pipeline;
 
-import io.netty.channel.ChannelPipeline;
-import protocolsupport.protocol.storage.netcache.NetworkDataCache;
+import io.netty.channel.Channel;
+import protocolsupport.api.Connection;
 
-public interface IPipelineBuilder {
+public interface IPipeLineBuilder {
 
-	public IPacketIdCodec getPacketIdCodec();
+	public void buildPipeLine(Channel channel, Connection connection);
 
-	public void buildTransport(ChannelPipeline pipeline);
-
-	public void buildCodec(ChannelPipeline pipeline, IPacketDataChannelIO io, NetworkDataCache cache);
-
-	public default void buildPostProcessor(IPacketDataChannelIO io) {
-	}
+	public void buildCodec(Channel channel, Connection connection);
 
 }

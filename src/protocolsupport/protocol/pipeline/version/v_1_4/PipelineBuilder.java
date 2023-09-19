@@ -1,30 +1,20 @@
 package protocolsupport.protocol.pipeline.version.v_1_4;
 
+import io.netty.channel.Channel;
 import io.netty.channel.ChannelPipeline;
+import protocolsupport.api.Connection;
 import protocolsupport.protocol.pipeline.ChannelHandlers;
-import protocolsupport.protocol.pipeline.IPacketDataChannelIO;
-import protocolsupport.protocol.pipeline.IPacketIdCodec;
-import protocolsupport.protocol.pipeline.version.util.builder.AbstractNoopFramingPipelineBuilder;
-import protocolsupport.protocol.storage.netcache.NetworkDataCache;
-import protocolsupport.protocol.typeremapper.packet.AnimatePacketReorderer;
+import protocolsupport.protocol.pipeline.version.AbstractNoopFramingPipeLineBuilder;
+import protocolsupport.protocol.storage.NetworkDataCache;
 
-public class PipelineBuilder extends AbstractNoopFramingPipelineBuilder {
+public class PipeLineBuilder extends AbstractNoopFramingPipeLineBuilder {
 
 	@Override
-	public IPacketIdCodec getPacketIdCodec() {
-		return PacketCodec.instance;
-	}
-
-	@Override
-	public void buildCodec(ChannelPipeline pipeline, IPacketDataChannelIO io, NetworkDataCache cache) {
-		pipeline
-		.addAfter(ChannelHandlers.RAW_CAPTURE_RECEIVE, ChannelHandlers.DECODER_TRANSFORMER, new PacketDecoder(io, cache))
-		.addAfter(ChannelHandlers.RAW_CAPTURE_SEND, ChannelHandlers.ENCODER_TRANSFORMER, new PacketEncoder(io, cache));
-	}
-
-	@Override
-	public void buildPostProcessor(IPacketDataChannelIO io) {
-		io.addProcessor(new AnimatePacketReorderer());
+	public void buildCodec(Channel channel, Connection connection) {
+		ChannelPipeline pipeline = channel.pipeline();
+		NetworkDataCache sharedstorage = new NetworkDataCache();
+		pipeline.addAfter(ChannelHandlers.RAW_CAPTURE_RECEIVE, ChannelHandlers.DECODER_TRANSFORMER, new PacketDecoder(connection, sharedstorage));
+		pipeline.addAfter(ChannelHandlers.RAW_CAPTURE_SEND, ChannelHandlers.ENCODER_TRANSFORMER, new PacketEncoder(connection, sharedstorage));
 	}
 
 }

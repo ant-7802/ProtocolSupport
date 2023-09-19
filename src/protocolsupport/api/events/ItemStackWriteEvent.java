@@ -1,23 +1,25 @@
 package protocolsupport.api.events;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import org.bukkit.event.Event;
 import org.bukkit.event.HandlerList;
 import org.bukkit.inventory.ItemStack;
 
 import protocolsupport.api.ProtocolVersion;
-import protocolsupport.api.chat.components.BaseComponent;
+import protocolsupport.protocol.utils.i18n.I18NData;
 
 /**
  * This event is fired when itemstack is being written to client
  */
-public class ItemStackWriteEvent extends Event {
+public abstract class ItemStackWriteEvent extends Event {
 
-	protected final ProtocolVersion version;
-	protected final String locale;
-	protected final ItemStack original;
+	private final ProtocolVersion version;
+	private final String locale;
+	private final ItemStack original;
+
+	@Deprecated
+	public ItemStackWriteEvent(ProtocolVersion version, ItemStack original) {
+		this(version, I18NData.DEFAULT_LOCALE, original);
+	}
 
 	public ItemStackWriteEvent(ProtocolVersion version, String locale, ItemStack original) {
 		super(true);
@@ -27,14 +29,12 @@ public class ItemStackWriteEvent extends Event {
 	}
 
 	/**
-	 * Returns the original itemstack (before remapping) <br>
-	 * This itemstack is immutable and throws exception on modify attempt <br>
-	 * All get methods except {@link ItemStack#getType()} and {@link ItemStack#getAmount()}} are slow due to internal itemstack to bukkit itemstack conversion <br>
-	 * To get a bukkit itemstack copy call {@link ItemStack#clone()}
+	 * Returns the original itemstack clone (no remaps applied) <br>
+	 * Modifying this itemstack has not effect
 	 * @return original itemstack
 	 */
 	public ItemStack getOriginal() {
-		return original;
+		return original.clone();
 	}
 
 	/**
@@ -53,34 +53,13 @@ public class ItemStackWriteEvent extends Event {
 		return locale;
 	}
 
-	protected List<String> additionalLore = new ArrayList<>();
-	protected BaseComponent forcedDisplayName = null;
-
 	/**
-	 * Returns a mutable copy of additional lore that will be added to item
-	 * @return additional lore that will be added to item
+	 * Returns the remapped itemstack <br>
+	 * This itemstack should be modified to change the resulting sent itemstack <br>
+	 * Modifying this itemstack to unsupported values (air material (0 type id), impossible data (< 0, > Short.MAX_VALUE), or impossible count (< 0, > 127)) will cause a client error
+	 * @return resulting itemstack
 	 */
-	public List<String> getAdditionalLore() {
-		return additionalLore;
-	}
-
-	/**
-	 * Returns current forced display name that will be applied to item <br>
-	 * Returns null if not set
-	 * @return forced display name
-	 */
-	public BaseComponent getForcedDisplayName() {
-		return forcedDisplayName;
-	}
-
-	/**
-	 * Sets forced display name that will be applied to item <br>
-	 * Null for not set
-	 * @param forcedDisplayName forced display name
-	 */
-	public void setForcedDisplayName(BaseComponent forcedDisplayName) {
-		this.forcedDisplayName = forcedDisplayName;
-	}
+	public abstract ItemStack getResult();
 
 	private static final HandlerList list = new HandlerList();
 

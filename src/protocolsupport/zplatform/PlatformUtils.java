@@ -8,34 +8,20 @@ import java.util.concurrent.FutureTask;
 import javax.crypto.SecretKey;
 
 import org.bukkit.Location;
-import org.bukkit.NamespacedKey;
-import org.bukkit.Particle;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.util.CachedServerIcon;
 
 import io.netty.channel.ChannelPipeline;
-import io.netty.channel.MultithreadEventLoopGroup;
-import protocolsupport.api.utils.Profile;
-import protocolsupport.protocol.ConnectionImpl;
-import protocolsupport.protocol.packet.handler.AbstractHandshakeListener;
-import protocolsupport.protocol.pipeline.IPacketFrameDecoder;
-import protocolsupport.protocol.pipeline.IPacketFrameEncoder;
-import protocolsupport.protocol.types.NetworkItemStack;
-import protocolsupport.protocol.utils.authlib.LoginProfile;
-import protocolsupport.zplatform.network.NetworkManagerWrapper;
+import protocolsupport.protocol.pipeline.IPacketPrepender;
+import protocolsupport.protocol.pipeline.IPacketSplitter;
+import protocolsupport.zplatform.itemstack.NBTTagCompoundWrapper;
 
 public interface PlatformUtils {
 
-	public ConnectionImpl getConnection(Player player);
+	public ItemStack createItemStackFromNBTTag(NBTTagCompoundWrapper tag);
 
-	public void updatePlayerInventorySlot(Player player, int slot);
-
-	public ItemStack createBukkitItemStackFromNetwork(NetworkItemStack stack);
-
-	public NetworkItemStack createNetworkItemStackFromBukkit(ItemStack itemstack);
-
-	public NamespacedKey getParticleKey(Particle particle);
+	public NBTTagCompoundWrapper createNBTTagFromItemStack(ItemStack itemstack);
 
 	public List<Player> getNearbyPlayers(Location location, double rX, double rY, double rZ);
 
@@ -65,18 +51,12 @@ public interface PlatformUtils {
 
 	public String convertBukkitIconToBase64(CachedServerIcon icon);
 
-	public MultithreadEventLoopGroup getServerIOEventLoopGroup();
-
 	public String getReadTimeoutHandlerName();
 
 	public void enableCompression(ChannelPipeline pipeline, int compressionThreshold);
 
 	public void enableEncryption(ChannelPipeline pipeline, SecretKey key, boolean fullEncryption);
 
-	public void setFraming(ChannelPipeline pipeline, IPacketFrameDecoder splitter, IPacketFrameEncoder prepender);
-
-	public AbstractHandshakeListener createHandshakeListener(NetworkManagerWrapper networkmanager);
-
-	public Profile createWrappedProfile(LoginProfile loginProfile, Player player);
+	public void setFraming(ChannelPipeline pipeline, IPacketSplitter splitter, IPacketPrepender prepender);
 
 }

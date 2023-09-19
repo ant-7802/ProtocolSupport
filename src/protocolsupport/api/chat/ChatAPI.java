@@ -1,165 +1,64 @@
 package protocolsupport.api.chat;
 
 import java.text.MessageFormat;
-import java.util.UUID;
 
 import org.apache.commons.lang3.Validate;
 import org.bukkit.entity.Player;
 
-import protocolsupport.ProtocolSupport;
-import protocolsupport.ProtocolSupportFileLog;
-import protocolsupport.api.Connection;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+
 import protocolsupport.api.ProtocolSupportAPI;
 import protocolsupport.api.chat.components.BaseComponent;
 import protocolsupport.api.chat.components.TextComponent;
-import protocolsupport.api.utils.NetworkState;
-import protocolsupport.protocol.codec.chat.ChatCodec;
-import protocolsupport.protocol.utils.ProtocolVersionsHelper;
-import protocolsupport.protocol.utils.i18n.I18NData;
+import protocolsupport.api.chat.modifiers.ClickAction;
+import protocolsupport.api.chat.modifiers.HoverAction;
+import protocolsupport.api.chat.modifiers.Modifier;
+import protocolsupport.utils.chat.ClickActionSerializer;
+import protocolsupport.utils.chat.ComponentSerializer;
+import protocolsupport.utils.chat.HoverActionSerializer;
+import protocolsupport.utils.chat.ModifierSerializer;
 import protocolsupport.zplatform.ServerPlatform;
-import protocolsupportbuildprocessor.Preload;
 
-@Preload
 public class ChatAPI {
 
-	private ChatAPI() {
-	}
+	private static final Gson gson = new GsonBuilder()
+	.registerTypeHierarchyAdapter(BaseComponent.class, new ComponentSerializer())
+	.registerTypeHierarchyAdapter(Modifier.class, new ModifierSerializer())
+	.registerTypeHierarchyAdapter(ClickAction.class, new ClickActionSerializer())
+	.registerTypeHierarchyAdapter(HoverAction.class, new HoverActionSerializer())
+	.create();
 
-	/**
-	 * Converts json string to chat component<br>
-	 * If json string is null, returns empty text component<br>
-	 * Actually calls {@link ChatAPI#fromJSON(String, boolean)} with lenient false
-	 * @param json json string
-	 * @return chat component
-	 * @throws JsonParseException if passed string is not in json format
-	 */
-	public static BaseComponent fromJSON(String json) {
-		return fromJSON(json, false);
-	}
-
-	/**
-	 * Converts json string to chat component<br>
-	 * If json string is null, returns empty text component<br>
-	 * If lenient is true and errors occurred while parsing returns text component containing input string json
-	 * @param json json string
-	 * @param lenient ignore errors
-	 * @return chat component
-	 * @throws JsonParseException if passed string is not in json format
-	 */
-	public static BaseComponent fromJSON(String json, boolean lenient) {
+	public static BaseComponent fromJSON(String json) throws JsonParseException {
 		try {
-			BaseComponent result = ChatCodec.deserialize(json);
+			BaseComponent result = gson.fromJson(json, BaseComponent.class);
 			return result != null ? result : new TextComponent("");
 		} catch (Exception e) {
-			if (lenient) {
-				if (ServerPlatform.get().getMiscUtils().isDebugging()) {
-					ProtocolSupport.logErrorSevere("Error parsing chat json " + json, e);
-				}
-				if (ProtocolSupportFileLog.isEnabled()) {
-					ProtocolSupportFileLog.logWarningError("Error parsing chat json " + json, e);
-				}
-				return new TextComponent(json);
-			} else {
-				throw new JsonParseException(json, e);
-			}
+			throw new JsonParseException(json, e);
 		}
 	}
 
-	/**
-	 * Converts chat component to json string
-	 * @param component chatcomponent
-	 * @return json string
-	 */
 	public static String toJSON(BaseComponent component) {
-		return component != null ? ChatCodec.serialize(ProtocolVersionsHelper.LATEST_PC, I18NData.DEFAULT_LOCALE, component) : null;
+		return component != null ? gson.toJson(component) : null;
 	}
 
-	/**
-	 * Sends message to player
-	 * @param player player
-	 * @param message chat component
-	 */
 	public static void sendMessage(Player player, BaseComponent message) {
-		sendMessage(ProtocolSupportAPI.getConnection(player), message);
+		sendMessage(player, message, MessagePosition.CHAT);
 	}
 
-	/**
-	 * Sends message to player
-	 * @param player player
-	 * @param messageJson chat json string
-	 */
 	public static void sendMessage(Player player, String messageJson) {
-		sendMessage(ProtocolSupportAPI.getConnection(player), messageJson);
+		sendMessage(player, messageJson, MessagePosition.CHAT);
 	}
 
-	/**
-	 * Sends message to player<br>
-	 * Allows setting position of the message
-	 * @param player player
-	 * @param message chat component
-	 * @param position message position
-	 */
 	public static void sendMessage(Player player, BaseComponent message, MessagePosition position) {
-		sendMessage(ProtocolSupportAPI.getConnection(player), message, position);
+		sendMessage(player, toJSON(message), position);
 	}
 
-	/**
-	 * Sends message to player<br>
-	 * Allows setting position of the message
-	 * @param player player
-	 * @param messageJson chat json string
-	 * @param position message position
-	 */
 	public static void sendMessage(Player player, String messageJson, MessagePosition position) {
-		sendMessage(ProtocolSupportAPI.getConnection(player), messageJson, position);
-	}
-
-	/**
-	 * Sends message to client
-	 * @param conection conection
-	 * @param message chat component
-	 */
-	public static void sendMessage(Connection conection, BaseComponent message) {
-		sendMessage(conection, message, MessagePosition.CHAT);
-	}
-
-	/**
-	 * Sends message to client
-	 * @param conection conection
-	 * @param messageJson chat json string
-	 */
-	public static void sendMessage(Connection conection, String messageJson) {
-		sendMessage(conection, messageJson, MessagePosition.CHAT);
-	}
-
-	/**
-	 * Sends message to client<br>
-	 * Allows setting position of the message
-	 * @param conection conection
-	 * @param message chat component
-	 * @param position message position
-	 */
-	public static void sendMessage(Connection conection, BaseComponent message, MessagePosition position) {
-		sendMessage(conection, toJSON(message), position);
-	}
-
-	protected static final UUID sender_system = new UUID(0, 0);
-
-	/**
-	 * Sends message to client<br>
-	 * Allows setting position of the message
-	 * @param conection conection
-	 * @param messageJson chat json string
-	 * @param position message position
-	 */
-	public static void sendMessage(Connection conection, String messageJson, MessagePosition position) {
-		Validate.notNull(conection, "Player can't be null");
+		Validate.notNull(player, "Player can't be null");
 		Validate.notNull(messageJson, "Message can't be null");
 		Validate.notNull(position, "Message position can't be null");
-		if (conection.getNetworkState() != NetworkState.PLAY) {
-			throw new IllegalArgumentException("Connection state should be " + NetworkState.PLAY + ", but was " + conection.getNetworkState());
-		}
-		conection.sendPacket(ServerPlatform.get().getPacketFactory().createOutboundChatPacket(messageJson, position.ordinal(), sender_system));
+		ProtocolSupportAPI.getConnection(player).sendPacket(ServerPlatform.get().getPacketFactory().createOutboundChatPacket(messageJson, position.ordinal()));
 	}
 
 	public static class JsonParseException extends RuntimeException {
@@ -169,7 +68,7 @@ public class ChatAPI {
 		}
 	}
 
-	public enum MessagePosition {
+	public static enum MessagePosition {
 		CHAT, SYSMESSAGE, HOTBAR
 	}
 

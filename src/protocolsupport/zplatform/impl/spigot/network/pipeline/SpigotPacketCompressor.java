@@ -2,16 +2,14 @@ package protocolsupport.zplatform.impl.spigot.network.pipeline;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
-import io.netty.handler.codec.EncoderException;
-import net.minecraft.network.PacketCompressor;
-import protocolsupport.protocol.codec.VarNumberCodec;
-import protocolsupport.utils.netty.RecyclableWrapCompressor;
-import protocolsupport.utils.netty.ReusableReadHeapBuffer;
+import protocolsupport.protocol.serializer.MiscSerializer;
+import protocolsupport.protocol.serializer.VarNumberSerializer;
+import protocolsupport.utils.netty.Compressor;
 
-public class SpigotPacketCompressor extends PacketCompressor {
+public class SpigotPacketCompressor extends net.minecraft.server.v1_12_R1.PacketCompressor {
 
-	protected final RecyclableWrapCompressor compressor = RecyclableWrapCompressor.create();
-	protected final int threshold;
+	private final Compressor compressor = Compressor.create();
+	private final int threshold;
 
 	public SpigotPacketCompressor(int threshold) {
 		super(threshold);
@@ -24,30 +22,19 @@ public class SpigotPacketCompressor extends PacketCompressor {
 		compressor.recycle();
 	}
 
-	protected final ReusableReadHeapBuffer readBuffer = new ReusableReadHeapBuffer();
-
 	@Override
-	protected void encode(ChannelHandlerContext ctx, ByteBuf from, ByteBuf to) {
+	protected void a(ChannelHandlerContext ctx, ByteBuf from, ByteBuf to)  {
 		int readable = from.readableBytes();
 		if (readable == 0) {
 			return;
 		}
 		if (readable < this.threshold) {
-			VarNumberCodec.writeVarInt(to, 0);
+			VarNumberSerializer.writeVarInt(to, 0);
 			to.writeBytes(from);
 		} else {
-			VarNumberCodec.writeVarInt(to, readable);
-			try {
-				readBuffer.readFrom(from, (larray, loffset, llength) -> compressor.compressTo(to, larray, loffset, llength));
-			} catch (Exception e) {
-				throw new EncoderException(e);
-			}
+			VarNumberSerializer.writeVarInt(to, readable);
+			to.writeBytes(compressor.compress(MiscSerializer.readAllBytes(from)));
 		}
-	}
-
-	@Override
-	protected ByteBuf allocateBuffer(ChannelHandlerContext ctx, ByteBuf buf, boolean preferDirect) throws Exception {
-		return ctx.alloc().heapBuffer(buf.readableBytes() + VarNumberCodec.MAX_LENGTH);
 	}
 
 }

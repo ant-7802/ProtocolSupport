@@ -1,105 +1,91 @@
 package api;
 
-import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.Test;
+import org.junit.Assert;
 
+import junit.framework.TestCase;
 import protocolsupport.api.ProtocolType;
 import protocolsupport.api.ProtocolVersion;
 
-class ProtocolVersionTests {
+public class ProtocolVersionTests extends TestCase {
 
-	@Test
-	void testIsAfter() {
-		Assertions.assertTrue(ProtocolVersion.MINECRAFT_1_11_1.isAfter(ProtocolVersion.MINECRAFT_1_10));
-		Assertions.assertFalse(ProtocolVersion.MINECRAFT_1_6_2.isAfter(ProtocolVersion.MINECRAFT_1_6_2));
-		Assertions.assertFalse(ProtocolVersion.MINECRAFT_1_7_10.isAfter(ProtocolVersion.MINECRAFT_1_10));
+	public void testIsAfter() {
+		assertTrue(ProtocolVersion.MINECRAFT_1_11_1.isAfter(ProtocolVersion.MINECRAFT_1_10));
+		assertFalse(ProtocolVersion.MINECRAFT_1_6_2.isAfter(ProtocolVersion.MINECRAFT_1_6_2));
+		assertFalse(ProtocolVersion.MINECRAFT_1_7_10.isAfter(ProtocolVersion.MINECRAFT_1_10));
 	}
 
-	@Test
-	void testIsAfterOrEq() {
-		Assertions.assertTrue(ProtocolVersion.MINECRAFT_1_11_1.isAfterOrEq(ProtocolVersion.MINECRAFT_1_10));
-		Assertions.assertTrue(ProtocolVersion.MINECRAFT_1_6_2.isAfterOrEq(ProtocolVersion.MINECRAFT_1_6_2));
-		Assertions.assertFalse(ProtocolVersion.MINECRAFT_1_7_10.isAfterOrEq(ProtocolVersion.MINECRAFT_1_10));
+	public void testIsAfterOrEq() {
+		assertTrue(ProtocolVersion.MINECRAFT_1_11_1.isAfterOrEq(ProtocolVersion.MINECRAFT_1_10));
+		assertTrue(ProtocolVersion.MINECRAFT_1_6_2.isAfterOrEq(ProtocolVersion.MINECRAFT_1_6_2));
+		assertFalse(ProtocolVersion.MINECRAFT_1_7_10.isAfterOrEq(ProtocolVersion.MINECRAFT_1_10));
 	}
 
-	@Test
-	void testIsBefore() {
-		Assertions.assertFalse(ProtocolVersion.MINECRAFT_1_11_1.isBefore(ProtocolVersion.MINECRAFT_1_10));
-		Assertions.assertFalse(ProtocolVersion.MINECRAFT_1_6_2.isBefore(ProtocolVersion.MINECRAFT_1_6_2));
-		Assertions.assertTrue(ProtocolVersion.MINECRAFT_1_7_10.isBefore(ProtocolVersion.MINECRAFT_1_10));
+	public void testIsBefore() {
+		assertFalse(ProtocolVersion.MINECRAFT_1_11_1.isBefore(ProtocolVersion.MINECRAFT_1_10));
+		assertFalse(ProtocolVersion.MINECRAFT_1_6_2.isBefore(ProtocolVersion.MINECRAFT_1_6_2));
+		assertTrue(ProtocolVersion.MINECRAFT_1_7_10.isBefore(ProtocolVersion.MINECRAFT_1_10));
 	}
 
-	@Test
-	void testIsBeforeOrEq() {
-		Assertions.assertFalse(ProtocolVersion.MINECRAFT_1_11_1.isBeforeOrEq(ProtocolVersion.MINECRAFT_1_10));
-		Assertions.assertTrue(ProtocolVersion.MINECRAFT_1_6_2.isBeforeOrEq(ProtocolVersion.MINECRAFT_1_6_2));
-		Assertions.assertTrue(ProtocolVersion.MINECRAFT_1_7_10.isBeforeOrEq(ProtocolVersion.MINECRAFT_1_10));
+	public void testIsBeforeOrEq() {
+		assertFalse(ProtocolVersion.MINECRAFT_1_11_1.isBeforeOrEq(ProtocolVersion.MINECRAFT_1_10));
+		assertTrue(ProtocolVersion.MINECRAFT_1_6_2.isBeforeOrEq(ProtocolVersion.MINECRAFT_1_6_2));
+		assertTrue(ProtocolVersion.MINECRAFT_1_7_10.isBeforeOrEq(ProtocolVersion.MINECRAFT_1_10));
 	}
 
-	@Test
-	void testIsBetween() {
-		Assertions.assertTrue(ProtocolVersion.MINECRAFT_1_6_4.isBetween(ProtocolVersion.MINECRAFT_1_4_7, ProtocolVersion.MINECRAFT_1_7_10));
-		Assertions.assertTrue(ProtocolVersion.MINECRAFT_1_6_4.isBetween(ProtocolVersion.MINECRAFT_1_6_4, ProtocolVersion.MINECRAFT_1_7_10));
-		Assertions.assertTrue(ProtocolVersion.MINECRAFT_1_6_4.isBetween(ProtocolVersion.MINECRAFT_1_4_7, ProtocolVersion.MINECRAFT_1_6_4));
-		Assertions.assertFalse(ProtocolVersion.MINECRAFT_1_6_4.isBetween(ProtocolVersion.MINECRAFT_1_7_5, ProtocolVersion.MINECRAFT_1_9));
+	public void testIsBetween() {
+		assertTrue(ProtocolVersion.MINECRAFT_1_6_4.isBetween(ProtocolVersion.MINECRAFT_1_4_7, ProtocolVersion.MINECRAFT_1_7_10));
+		assertTrue(ProtocolVersion.MINECRAFT_1_6_4.isBetween(ProtocolVersion.MINECRAFT_1_6_4, ProtocolVersion.MINECRAFT_1_7_10));
+		assertTrue(ProtocolVersion.MINECRAFT_1_6_4.isBetween(ProtocolVersion.MINECRAFT_1_4_7, ProtocolVersion.MINECRAFT_1_6_4));
+		assertFalse(ProtocolVersion.MINECRAFT_1_6_4.isBetween(ProtocolVersion.MINECRAFT_1_7_5, ProtocolVersion.MINECRAFT_1_9));
 	}
 
-	@Test
-	void testNext() {
-		Assertions.assertEquals(ProtocolVersion.MINECRAFT_1_5_1, ProtocolVersion.MINECRAFT_1_4_7.next());
-		Assertions.assertNotEquals(ProtocolVersion.MINECRAFT_1_7_10, ProtocolVersion.MINECRAFT_1_6_2.next());
+	public void testNext() {
+		assertTrue(ProtocolVersion.MINECRAFT_1_4_7.next() == ProtocolVersion.MINECRAFT_1_5_1);
+		assertFalse(ProtocolVersion.MINECRAFT_1_6_2.next() == ProtocolVersion.MINECRAFT_1_7_10);
 	}
 
-	@Test
-	void testPrevious() {
-		Assertions.assertEquals(ProtocolVersion.MINECRAFT_1_4_7, ProtocolVersion.MINECRAFT_1_5_1.previous());
-		Assertions.assertNotEquals(ProtocolVersion.MINECRAFT_1_7_10, ProtocolVersion.MINECRAFT_1_6_2.previous());
+	public void testPrevious() {
+		assertTrue(ProtocolVersion.MINECRAFT_1_5_1.previous() == ProtocolVersion.MINECRAFT_1_4_7);
+		assertFalse(ProtocolVersion.MINECRAFT_1_6_2.previous() == ProtocolVersion.MINECRAFT_1_7_10);
 	}
 
-	@Test
-	void testGetAllBetween() {
-		Assertions.assertArrayEquals(
-			new ProtocolVersion[] {ProtocolVersion.MINECRAFT_1_6_4, ProtocolVersion.MINECRAFT_1_7_5, ProtocolVersion.MINECRAFT_1_7_10},
-			ProtocolVersion.getAllBetween(ProtocolVersion.MINECRAFT_1_6_4, ProtocolVersion.MINECRAFT_1_7_10)
-		);
-		Assertions.assertArrayEquals(
-			new ProtocolVersion[] {ProtocolVersion.MINECRAFT_1_6_4, ProtocolVersion.MINECRAFT_1_7_5, ProtocolVersion.MINECRAFT_1_7_10},
-			ProtocolVersion.getAllBetween(ProtocolVersion.MINECRAFT_1_7_10, ProtocolVersion.MINECRAFT_1_6_4)
-		);
+	public void testGetAllBetween() {
+		Assert.assertArrayEquals(ProtocolVersion.getAllBetween(ProtocolVersion.MINECRAFT_1_6_4, ProtocolVersion.MINECRAFT_1_7_10), new ProtocolVersion[] {
+			ProtocolVersion.MINECRAFT_1_6_4, ProtocolVersion.MINECRAFT_1_7_5, ProtocolVersion.MINECRAFT_1_7_10
+		});
+		Assert.assertArrayEquals(ProtocolVersion.getAllBetween(ProtocolVersion.MINECRAFT_1_7_10, ProtocolVersion.MINECRAFT_1_6_4), new ProtocolVersion[] {
+			ProtocolVersion.MINECRAFT_1_6_4, ProtocolVersion.MINECRAFT_1_7_5, ProtocolVersion.MINECRAFT_1_7_10
+		});
 	}
 
-	@Test
-	void testGetAllAfterI() {
-		Assertions.assertArrayEquals(
+	public void testGetAllAfterI() {
+		Assert.assertArrayEquals(
 			ProtocolVersion.getAllAfterI(ProtocolVersion.MINECRAFT_1_11),
 			ProtocolVersion.getAllBetween(ProtocolVersion.MINECRAFT_1_11, ProtocolVersion.getLatest(ProtocolType.PC))
 		);
 	}
 
-	@Test
-	void testGetAllAfterE() {
-		Assertions.assertArrayEquals(
+	public void testGetAllAfterE() {
+		Assert.assertArrayEquals(
 			ProtocolVersion.getAllAfterE(ProtocolVersion.MINECRAFT_1_11),
 			ProtocolVersion.getAllBetween(ProtocolVersion.MINECRAFT_1_11_1, ProtocolVersion.getLatest(ProtocolType.PC))
 		);
-		Assertions.assertArrayEquals(new ProtocolVersion[0], ProtocolVersion.getAllAfterE(ProtocolVersion.getLatest(ProtocolType.PC)));
+		Assert.assertArrayEquals(ProtocolVersion.getAllAfterE(ProtocolVersion.getLatest(ProtocolType.PC)), new ProtocolVersion[0]);
 	}
 
-	@Test
-	void testGetAllBeforeI() {
-		Assertions.assertArrayEquals(
+	public void testGetAllBeforeI() {
+		Assert.assertArrayEquals(
 			ProtocolVersion.getAllBeforeI(ProtocolVersion.MINECRAFT_1_11),
 			ProtocolVersion.getAllBetween(ProtocolVersion.MINECRAFT_1_11, ProtocolVersion.getOldest(ProtocolType.PC))
 		);
 	}
 
-	@Test
-	void testGetAllBeforeE() {
-		Assertions.assertArrayEquals(
+	public void testGetAllBeforeE() {
+		Assert.assertArrayEquals(
 			ProtocolVersion.getAllBeforeE(ProtocolVersion.MINECRAFT_1_11),
 			ProtocolVersion.getAllBetween(ProtocolVersion.MINECRAFT_1_10, ProtocolVersion.getOldest(ProtocolType.PC))
 		);
-		Assertions.assertArrayEquals(new ProtocolVersion[0], ProtocolVersion.getAllBeforeE(ProtocolVersion.getOldest(ProtocolType.PC)));
+		Assert.assertArrayEquals(ProtocolVersion.getAllBeforeE(ProtocolVersion.getOldest(ProtocolType.PC)), new ProtocolVersion[0]);
 	}
 
 }

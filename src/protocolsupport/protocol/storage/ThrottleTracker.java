@@ -4,21 +4,14 @@ import java.net.InetAddress;
 
 import org.bukkit.Bukkit;
 
-import it.unimi.dsi.fastutil.longs.LongIterator;
-import it.unimi.dsi.fastutil.objects.Object2LongOpenHashMap;
-import protocolsupport.utils.MiscUtils;
+import gnu.trove.iterator.TObjectLongIterator;
+import gnu.trove.map.hash.TObjectLongHashMap;
 
 public class ThrottleTracker {
 
-	private ThrottleTracker() {
-	}
-
 	private static final long time = Bukkit.getConnectionThrottle();
 
-	private static final Object2LongOpenHashMap<InetAddress> tracker = new Object2LongOpenHashMap<>();
-	static {
-		tracker.defaultReturnValue(-1);
-	}
+	private static final TObjectLongHashMap<InetAddress> tracker = new TObjectLongHashMap<>();
 
 	public static boolean isEnabled() {
 		return time > 0;
@@ -26,15 +19,16 @@ public class ThrottleTracker {
 
 	public static boolean throttle(InetAddress address) {
 		synchronized (tracker) {
-			long ctime = MiscUtils.currentTimeMillisFromNanoTime();
-			LongIterator iterator = tracker.values().iterator();
+			long ctime = System.currentTimeMillis();
+			TObjectLongIterator<InetAddress> iterator = tracker.iterator();
 			while (iterator.hasNext()) {
-				if (iterator.nextLong() < ctime) {
+				iterator.advance();
+				if (iterator.value() < ctime) {
 					iterator.remove();
 				}
 			}
 			long ret = tracker.put(address, ctime + time);
-			return ret != tracker.defaultReturnValue();
+			return ret != tracker.getNoEntryValue();
 		}
 	}
 

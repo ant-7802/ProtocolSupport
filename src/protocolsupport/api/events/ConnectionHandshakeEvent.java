@@ -9,10 +9,10 @@ import protocolsupport.api.Connection;
 /**
  * This event is fired after receiving the client handshake (handshake packet)
  */
-public class ConnectionHandshakeEvent extends CancellableLoginConnectionEvent {
+public class ConnectionHandshakeEvent extends ConnectionEvent {
 
-	protected String hostname;
-	protected boolean shouldParseHostname = true;
+	private String hostname;
+	private boolean shouldParseHostname = true;
 
 	public ConnectionHandshakeEvent(Connection connection, String hostname) {
 		super(connection);
@@ -20,8 +20,8 @@ public class ConnectionHandshakeEvent extends CancellableLoginConnectionEvent {
 	}
 
 	/**
-	 * Returns the hostname to which client connects to<br>
-	 * This data can contain spoofed data
+	 * Returns the hostname to which client connects to
+	 * This is data can contain spoofed data
 	 * @return hostname
 	 */
 	public String getHostname() {
@@ -29,8 +29,8 @@ public class ConnectionHandshakeEvent extends CancellableLoginConnectionEvent {
 	}
 
 	/**
-	 * Sets hostname to which client connects to<br>
-	 * This data can contain spoofed data
+	 * Sets hostname to which client connects to
+	 * This data can contains spoofed data
 	 * @param hostname hostname
 	 */
 	public void setHostname(String hostname) {
@@ -38,9 +38,9 @@ public class ConnectionHandshakeEvent extends CancellableLoginConnectionEvent {
 	}
 
 	/**
-	 * Returns true if server should attempt hostname spoofed data parsing in case proxy is enabled <br>
+	 * Returns true if server should attempt hostname spoofed data parsing in hostname in case proxy is enabled
 	 * Returns true by default
-	 * @return true if server should attempt hostname spoofed data parsing in case proxy is enabled
+	 * @return true if server should attempt hostname spoofed data parsing in hostname in case proxy is enabled
 	 */
 	public boolean shouldParseHostname() {
 		return shouldParseHostname;
@@ -70,6 +70,33 @@ public class ConnectionHandshakeEvent extends CancellableLoginConnectionEvent {
 	 */
 	public void setSpoofedAddress(InetSocketAddress spoofedAddress) {
 		this.spoofedAddress = spoofedAddress;
+	}
+
+	private String denyLoginMessage;
+
+	/**
+	 * Returns true if login is denied
+	 * @return true if login is denied
+	 */
+	public boolean isLoginDenied() {
+		return denyLoginMessage != null;
+	}
+
+	/**
+	 * Returns deny login message or null if login is not denied
+	 * @return deny login message or null
+	 */
+	public String getDenyLoginMessage() {
+		return denyLoginMessage;
+	}
+
+	/**
+	 * Sets the login deny message
+	 * If message is null, login won't be denied
+	 * @param message login deny message
+	 */
+	public void denyLogin(String message) {
+		this.denyLoginMessage = message;
 	}
 
 

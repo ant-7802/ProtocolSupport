@@ -1,14 +1,14 @@
 package protocolsupport.api.events;
 
+import java.net.InetSocketAddress;
 import java.util.ArrayList;
 import java.util.List;
 
 import org.bukkit.event.HandlerList;
 
 import protocolsupport.api.Connection;
+import protocolsupport.api.ProtocolSupportAPI;
 import protocolsupport.api.ProtocolVersion;
-import protocolsupport.api.chat.components.BaseComponent;
-import protocolsupport.api.chat.components.TextComponent;
 import protocolsupport.api.utils.IconUtils;
 import protocolsupport.zplatform.ServerPlatform;
 
@@ -17,33 +17,24 @@ import protocolsupport.zplatform.ServerPlatform;
  */
 public class ServerPingResponseEvent extends ConnectionEvent {
 
-	protected ProtocolInfo info;
-	protected BaseComponent motd;
-	protected String icon;
-	protected int onlinePlayers;
-	protected int maxPlayers;
-	protected List<String> players;
+	private ProtocolInfo info;
+	private String motd;
+	private String icon;
+	private int maxPlayers;
+	private List<String> players;
 
-	public ServerPingResponseEvent(
-		Connection connection,
-		ProtocolInfo info, String icon, String motd,
-		int onlinePlayers, int maxPlayers, List<String> players
-	) {
-		this(connection, info, icon, BaseComponent.fromMessage(motd), onlinePlayers, maxPlayers, players);
-	}
-
-	public ServerPingResponseEvent(
-		Connection connection,
-		ProtocolInfo info, String icon, BaseComponent motd,
-		int onlinePlayers, int maxPlayers, List<String> players
-	) {
+	public ServerPingResponseEvent(Connection connection, ProtocolInfo info, String icon, String motd, int maxPlayers, List<String> players) {
 		super(connection);
 		setProtocolInfo(info);
 		setIcon(icon);
-		setJsonMotd(motd);
-		this.onlinePlayers = onlinePlayers;
+		setMotd(motd);
 		setMaxPlayers(maxPlayers);
 		setPlayers(players);
+	}
+
+	@Deprecated
+	public ServerPingResponseEvent(InetSocketAddress address, ProtocolInfo info, String icon, String motd, int maxPlayers, List<String> players) {
+		this(ProtocolSupportAPI.getConnection(address), info, icon, motd, maxPlayers, players);
 	}
 
 	/**
@@ -81,55 +72,20 @@ public class ServerPingResponseEvent extends ConnectionEvent {
 	}
 
 	/**
-	 * Returns MotD<br>
-	 * The returned string a result of converting json motd to legacy text, so it's better to use {@link ServerPingResponseEvent#getJsonMotd()} instead
-	 * @return MotD
-	 */
-	public String getMotd() {
-		return motd.toLegacyText();
-	}
-
-	/**
 	 * Returns MotD
 	 * @return MotD
 	 */
-	public BaseComponent getJsonMotd() {
+	public String getMotd() {
 		return motd;
 	}
 
 	/**
 	 * Sets MotD <br>
-	 * If MotD is null, empty motd is used
+	 * If MotD is null default one is used
 	 * @param motd motd
 	 */
 	public void setMotd(String motd) {
-		setJsonMotd(motd != null ? BaseComponent.fromMessage(motd) : null);
-	}
-
-	/**
-	 * Sets MotD <br>
-	 * If MotD is null, empty motd is used
-	 * @param motd motd
-	 */
-	public void setJsonMotd(BaseComponent motd) {
-		this.motd = motd != null ? motd : new TextComponent("");
-	}
-
-	/**
-	 * Returns online players count
-	 * @return online players count
-	 */
-	public int getOnlinePlayers() {
-		return onlinePlayers;
-	}
-
-	/**
-	 * Decrements online players count <br>
-	 * The decrement is clamped to [0, {@link #getOnlinePlayers()}]
-	 * @param decrement player count decrement
-	 */
-	public void decrementOnlinePlayers(int decrement) {
-		onlinePlayers -= Math.min(Math.max(0, decrement), onlinePlayers);
+		this.motd = motd != null ? motd : "A minecraft server (ProtocolSupport)";
 	}
 
 	/**

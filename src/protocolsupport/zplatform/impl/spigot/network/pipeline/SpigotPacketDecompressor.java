@@ -2,25 +2,24 @@ package protocolsupport.zplatform.impl.spigot.network.pipeline;
 
 import java.text.MessageFormat;
 import java.util.List;
+import java.util.zip.DataFormatException;
 
 import io.netty.buffer.ByteBuf;
+import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.DecoderException;
-import net.minecraft.network.PacketDecompressor;
-import protocolsupport.protocol.codec.VarNumberCodec;
+import protocolsupport.protocol.serializer.MiscSerializer;
+import protocolsupport.protocol.serializer.VarNumberSerializer;
 import protocolsupport.utils.netty.Decompressor;
-import protocolsupport.utils.netty.ReusableReadHeapBuffer;
 
-public class SpigotPacketDecompressor extends PacketDecompressor {
+public class SpigotPacketDecompressor extends net.minecraft.server.v1_12_R1.PacketDecompressor {
 
-	protected static final int length_max = 1 << 23;
+	private static final int maxPacketLength = (int) Math.pow(2, 7 * 3);
 
-	protected final int threshold;
-	protected final Decompressor decompressor = Decompressor.create();
+	private final Decompressor decompressor = Decompressor.create();
 
 	public SpigotPacketDecompressor(int threshold) {
-		super(threshold, true);
-		this.threshold = threshold;
+		super(threshold);
 	}
 
 	@Override
@@ -29,26 +28,19 @@ public class SpigotPacketDecompressor extends PacketDecompressor {
 		decompressor.recycle();
 	}
 
-	protected final ReusableReadHeapBuffer readBuffer = new ReusableReadHeapBuffer();
-
 	@Override
-	protected void decode(ChannelHandlerContext ctx, ByteBuf from, List<Object> list) throws Exception {
+	protected void decode(ChannelHandlerContext ctx, ByteBuf from, List<Object> list) throws DataFormatException {
 		if (!from.isReadable()) {
 			return;
 		}
-		int length = VarNumberCodec.readVarInt(from);
-		if (length == 0) {
-			list.add(from.retain());
+		int uncompressedlength = VarNumberSerializer.readVarInt(from);
+		if (uncompressedlength == 0) {
+			list.add(from.readBytes(from.readableBytes()));
 		} else {
-			if (length < threshold) {
-				throw new DecoderException(MessageFormat.format("Badly compressed packet - size of {0} is lower than compression threshold of {1}", length, threshold));
+			if (uncompressedlength > maxPacketLength) {
+				throw new DecoderException(MessageFormat.format("Badly compressed packet - size of {0} is larger than protocol maximum of {1}", uncompressedlength, maxPacketLength));
 			}
-			if (length > length_max) {
-				throw new DecoderException(MessageFormat.format("Badly compressed packet - size of {0} is larger than protocol maximum of {1}", length, length_max));
-			}
-			ByteBuf out = ctx.alloc().heapBuffer(length);
-			readBuffer.readFrom(from, (larray, loffset, llength) -> decompressor.decompressTo(out, larray, loffset, llength, length));
-			list.add(out);
+			list.add(Unpooled.wrappedBuffer(decompressor.decompress(MiscSerializer.readAllBytes(from), uncompressedlength)));
 		}
 	}
 

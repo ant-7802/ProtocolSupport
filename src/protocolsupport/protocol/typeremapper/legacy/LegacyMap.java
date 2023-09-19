@@ -1,7 +1,6 @@
 package protocolsupport.protocol.typeremapper.legacy;
 
 import java.util.ArrayList;
-import java.util.List;
 
 public class LegacyMap {
 
@@ -25,7 +24,7 @@ public class LegacyMap {
 		rowEnd = ystart + rows;
 	}
 
-	public List<ColumnEntry> toPre18MapData() {
+	public ArrayList<ColumnEntry> toPre18MapData() {
 		ArrayList<ColumnEntry> entries = new ArrayList<>();
 		for (int column = columnStart; column < columnEnd; column++) {
 			ColumnEntry entry = new ColumnEntry(column, rowStart, rowEnd - rowStart);

@@ -8,7 +8,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Base64;
 
-import javax.annotation.Nonnull;
 import javax.imageio.ImageIO;
 
 import org.apache.commons.lang3.Validate;
@@ -18,16 +17,13 @@ import protocolsupport.zplatform.ServerPlatform;
 
 public class IconUtils {
 
-	private IconUtils() {
-	}
-
 	/**
 	 * Loads icon to base64 form from {@link File}
 	 * @param file file from which base64 will be constructed
 	 * @return base64 icon
 	 * @throws IOException if new FileInputStream(file) throws
 	 */
-	public static @Nonnull String loadIcon(@Nonnull File file) throws IOException {
+	public static String loadIcon(File file) throws IOException {
 		return loadIcon(new FileInputStream(file));
 	}
 
@@ -37,7 +33,7 @@ public class IconUtils {
 	 * @return base64 icon
 	 * @throws IOException if ImageIO.read(rawStream) throws
 	 */
-	public static @Nonnull String loadIcon(@Nonnull InputStream rawStream) throws IOException {
+	public static String loadIcon(InputStream rawStream) throws IOException {
 		return loadIcon(ImageIO.read(rawStream));
 	}
 
@@ -48,7 +44,7 @@ public class IconUtils {
 	 * @throws IOException if can't write image data as png
 	 * @throws IllegalArgumentException if image widget and height != 64x64 pixels
 	 */
-	public static @Nonnull String loadIcon(@Nonnull BufferedImage image) throws IOException {
+	public static String loadIcon(BufferedImage image) throws IOException {
 		Validate.isTrue(image.getWidth() == 64, "Must be 64 pixels wide");
 		Validate.isTrue(image.getHeight() == 64, "Must be 64 pixels high");
 		ByteArrayOutputStream data = new ByteArrayOutputStream();
@@ -62,7 +58,7 @@ public class IconUtils {
 	 * @param icon bukkit server icon
 	 * @return base64 icon
 	 */
-	public static @Nonnull String fromBukkit(@Nonnull CachedServerIcon icon) {
+	public static String fromBukkit(CachedServerIcon icon) {
 		return ServerPlatform.get().getMiscUtils().convertBukkitIconToBase64(icon);
 	}
 

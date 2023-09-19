@@ -1,73 +1,57 @@
 package protocolsupport.zplatform.impl.spigot.network.handler;
 
-import java.security.GeneralSecurityException;
 import java.security.PrivateKey;
 
 import javax.crypto.SecretKey;
 
 import org.bukkit.Bukkit;
 
-import net.minecraft.network.NetworkManager;
-import net.minecraft.network.chat.IChatBaseComponent;
-import net.minecraft.network.protocol.login.PacketLoginInCustomPayload;
-import net.minecraft.network.protocol.login.PacketLoginInEncryptionBegin;
-import net.minecraft.network.protocol.login.PacketLoginInListener;
-import net.minecraft.network.protocol.login.PacketLoginInStart;
-import net.minecraft.util.CryptographyException;
+import net.minecraft.server.v1_12_R1.IChatBaseComponent;
+import net.minecraft.server.v1_12_R1.ITickable;
+import net.minecraft.server.v1_12_R1.PacketLoginInEncryptionBegin;
+import net.minecraft.server.v1_12_R1.PacketLoginInListener;
+import net.minecraft.server.v1_12_R1.PacketLoginInStart;
 import protocolsupport.protocol.packet.handler.AbstractLoginListener;
-import protocolsupport.zplatform.impl.spigot.network.SpigotNetworkManagerWrapper;
 import protocolsupport.zplatform.network.NetworkManagerWrapper;
 
-public class SpigotLoginListener extends AbstractLoginListener implements PacketLoginInListener {
+public class SpigotLoginListener extends AbstractLoginListener implements ITickable, PacketLoginInListener {
 
-	public SpigotLoginListener(NetworkManagerWrapper networkmanager) {
-		super(networkmanager);
+	public SpigotLoginListener(NetworkManagerWrapper networkmanager, String hostname) {
+		super(networkmanager, hostname);
+	}
+
+	@Override
+	public void e() {
+		tick();
 	}
 
 	@Override
 	public void a(IChatBaseComponent msg) {
-		Bukkit.getLogger().info(getConnectionRepr() + " lost connection: " + msg.a());
+		Bukkit.getLogger().info(getConnectionRepr() + " lost connection: " + msg.getText());
 	}
 
 	@Override
 	public void a(PacketLoginInStart packet) {
-		handleLoginStart(packet.b().getName());
+		handleLoginStart(packet.a().getName());
 	}
 
 	@Override
 	public void a(PacketLoginInEncryptionBegin packet) {
 		handleEncryption(new EncryptionPacketWrapper() {
 			@Override
-			public SecretKey getSecretKey(PrivateKey key) throws GeneralSecurityException {
-				try {
-					return packet.a(key);
-				} catch (CryptographyException e) {
-					throw new GeneralSecurityException(e);
-				}
+			public SecretKey getSecretKey(PrivateKey key) {
+				return packet.a(key);
 			}
 			@Override
-			public byte[] getNonce(PrivateKey key) throws GeneralSecurityException {
-				try {
-					return packet.b(key);
-				} catch (CryptographyException e) {
-					throw new GeneralSecurityException(e);
-				}
+			public byte[] getNonce(PrivateKey key) {
+				return packet.b(key);
 			}
 		});
 	}
 
 	@Override
 	protected SpigotLoginListenerPlay getLoginListenerPlay() {
-		return new SpigotLoginListenerPlay(networkManager);
-	}
-
-	@Override
-	public void a(PacketLoginInCustomPayload var1) {
-	}
-
-	@Override
-	public NetworkManager a() {
-		return ((SpigotNetworkManagerWrapper) this.networkManager).unwrap();
+		return new SpigotLoginListenerPlay(networkManager, profile, isOnlineMode, hostname);
 	}
 
 }

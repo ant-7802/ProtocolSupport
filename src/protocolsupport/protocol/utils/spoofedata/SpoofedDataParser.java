@@ -1,27 +1,41 @@
 package protocolsupport.protocol.utils.spoofedata;
 
-import com.destroystokyo.paper.event.player.PlayerHandshakeEvent;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.function.Function;
 
-import protocolsupport.api.Connection;
+public class SpoofedDataParser {
 
-public abstract class SpoofedDataParser {
+	private static final List<Function<String, SpoofedData>> parsers = new ArrayList<>();
 
-	protected static final SpoofedDataParser current = selectParser();
-
-	protected static final SpoofedDataParser selectParser() {
-		BungeeCordSpoofedDataParser bungeecordparser = new BungeeCordSpoofedDataParser();
-		try {
-			Class.forName(PlayerHandshakeEvent.class.getName());
-			return new PaperSpoofedDataParser(bungeecordparser);
-		} catch (Throwable e) {
+	static {
+		if (isPaperHandshakeEvent()) {
+			parsers.add(new PaperSpoofedDataParser());
 		}
-		return bungeecordparser;
+		parsers.add(new BungeeCordSpoofedDataParser());
 	}
 
-	public static SpoofedData tryParse(Connection connecton, String data, boolean proxyEnabled) {
-		return current.parse(connecton, data, proxyEnabled);
+	public static SpoofedData tryParse(String data) {
+		for (Function<String, SpoofedData> parser : parsers) {
+			try {
+				SpoofedData result = parser.apply(data);
+				if (result != null) {
+					return result;
+				}
+			} catch (Exception e) {
+				// ignore
+			}
+		}
+		return null;
 	}
 
-	protected abstract SpoofedData parse(Connection connecton, String data, boolean proxyEnabled);
+	private static boolean isPaperHandshakeEvent() {
+		try {
+			Class.forName("com.destroystokyo.paper.event.player.PlayerHandshakeEvent");
+			return true;
+		} catch (ClassNotFoundException e) {
+			return false;
+		}
+	}
 
 }

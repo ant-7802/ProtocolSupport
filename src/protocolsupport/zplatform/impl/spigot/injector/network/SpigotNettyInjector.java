@@ -8,27 +8,24 @@ import java.util.ListIterator;
 
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelFuture;
-import net.minecraft.network.NetworkManager;
-import net.minecraft.network.chat.ChatComponentText;
-import net.minecraft.server.network.ServerConnection;
-import protocolsupport.utils.reflection.ReflectionUtils;
+import net.minecraft.server.v1_12_R1.ChatComponentText;
+import net.minecraft.server.v1_12_R1.NetworkManager;
+import net.minecraft.server.v1_12_R1.ServerConnection;
+import protocolsupport.utils.ReflectionUtils;
 import protocolsupport.zplatform.impl.spigot.SpigotMiscUtils;
 
 public class SpigotNettyInjector {
 
-	private SpigotNettyInjector() {
-	}
-
 	@SuppressWarnings("unchecked")
-	public static void inject() throws IllegalAccessException, NoSuchFieldException {
-		ServerConnection serverConnection = SpigotMiscUtils.SERVER.ad();
-		Collection<NetworkManager> nmList = null;
+	public static void inject() throws IllegalArgumentException, IllegalAccessException, NoSuchFieldException, SecurityException {
+		ServerConnection serverConnection = SpigotMiscUtils.getServer().an();
+		List<NetworkManager> nmList = null;
 		try {
-			nmList = (Collection<NetworkManager>) ReflectionUtils.setAccessible(ServerConnection.class.getDeclaredField("g")).get(serverConnection);
+			nmList = (List<NetworkManager>) ReflectionUtils.setAccessible(ServerConnection.class.getDeclaredField("pending")).get(serverConnection);
 		} catch (NoSuchFieldException e) {
-			nmList = (Collection<NetworkManager>) ReflectionUtils.setAccessible(ServerConnection.class.getDeclaredField("connectedChannels")).get(serverConnection);
+			nmList = (List<NetworkManager>) ReflectionUtils.setAccessible(ServerConnection.class.getDeclaredField("h")).get(serverConnection);
 		}
-		Field connectionsListField = ReflectionUtils.setAccessible(ServerConnection.class.getDeclaredField("f"));
+		Field connectionsListField = ReflectionUtils.setAccessible(ServerConnection.class.getDeclaredField("g"));
 		ChannelInjectList connectionsList = new ChannelInjectList(nmList, (List<ChannelFuture>) connectionsListField.get(serverConnection));
 		connectionsListField.set(serverConnection, connectionsList);
 		connectionsList.injectExisting();
@@ -36,12 +33,11 @@ public class SpigotNettyInjector {
 
 	public static class ChannelInjectList implements List<ChannelFuture> {
 
-		private final Collection<NetworkManager> networkManagers;
+		private final List<NetworkManager> networkManagersList;
 		private final List<ChannelFuture> originalList;
-
-		public ChannelInjectList(Collection<NetworkManager> networkManagerList, List<ChannelFuture> originalList) {
+		public ChannelInjectList(List<NetworkManager> networkManagerList, List<ChannelFuture> originalList) {
 			this.originalList = originalList;
-			this.networkManagers = networkManagerList;
+			this.networkManagersList = networkManagerList;
 		}
 
 		public void injectExisting() {
@@ -91,10 +87,10 @@ public class SpigotNettyInjector {
 		protected void inject(ChannelFuture future) {
 			Channel channel = future.channel();
 			channel.pipeline().addFirst(new SpigotNettyServerChannelHandler());
-			synchronized (networkManagers) {
-				for (NetworkManager nm : networkManagers) {
-					if ((nm.m != null) && nm.m.localAddress().equals(channel.localAddress())) {
-						nm.a(new ChatComponentText("ProtocolSupport channel reset"));
+			synchronized (networkManagersList) {
+				for (NetworkManager nm : networkManagersList) {
+					if ((nm.channel != null) && nm.channel.localAddress().equals(channel.localAddress())) {
+						nm.close(new ChatComponentText("ProtocolSupport channel reset"));
 					}
 				}
 			}

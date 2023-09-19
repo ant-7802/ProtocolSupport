@@ -9,8 +9,8 @@ import protocolsupport.api.Connection;
  */
 public class ConnectionCloseEvent extends ConnectionEvent {
 
-	public ConnectionCloseEvent(Connection connection, boolean async) {
-		super(connection, async);
+	public ConnectionCloseEvent(Connection connection) {
+		super(connection);
 	}
 
 	private static final HandlerList list = new HandlerList();
